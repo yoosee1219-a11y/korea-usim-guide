@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   authors: [{ name: 'Korea USIM Comparison' }],
   creator: 'Korea USIM Comparison',
   publisher: 'Korea USIM Comparison',
-  metadataBase: new URL('https://korea-usim-guide-yoosee1219-3402s-projects.vercel.app'),
+  metadataBase: new URL('https://koreausimguide.com'),
   alternates: {
     canonical: '/',
     languages: {
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: '한국 유심 요금제 비교 - Korea USIM Comparison',
     description: '한국 통신사 유심 요금제를 쉽고 빠르게 비교하세요. SKT, KT, LG U+, MVNO 등 다양한 요금제를 한눈에!',
-    url: 'https://korea-usim-guide-yoosee1219-3402s-projects.vercel.app',
+    url: 'https://koreausimguide.com',
     siteName: '한국 유심 요금제 비교',
     locale: 'ko_KR',
     type: 'website',
