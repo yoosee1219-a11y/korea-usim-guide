@@ -53,7 +53,9 @@ export const metadata: Metadata = {
   },
   verification: {
     google: 'your-google-verification-code',
-    naver: '961b80ca1b3b54fcc1df6ddfa756450da1bbb511',
+  },
+  other: {
+    'naver-site-verification': '961b80ca1b3b54fcc1df6ddfa756450da1bbb511',
   },
 }
 
