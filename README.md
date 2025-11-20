@@ -56,3 +56,7 @@ korea-usim-comparison/
 │   │   ├── plans/          # 요금제 API
 │   │   ├── carriers/       # 통신사 API
 │   │   └── blog/           # 블로그 API
+
+
+## Auto-Deploy Test
+Last updated: $(date)
