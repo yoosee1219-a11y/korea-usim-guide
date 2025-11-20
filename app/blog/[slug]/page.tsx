@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Toast from '@/components/Toast'
 import { useToast } from '@/lib/useToast'
+import { useLanguage } from '@/lib/useLanguage'
 import type { BlogPost } from '@/types/database'
 
 export default function BlogPostPage() {
@@ -12,7 +13,7 @@ export default function BlogPostPage() {
   const slug = params.slug as string
   const [post, setPost] = useState<BlogPost | null>(null)
   const [loading, setLoading] = useState(true)
-  const [language, setLanguage] = useState<'ko' | 'en' | 'vi' | 'th' | 'tl' | 'uz' | 'ne' | 'mn' | 'id' | 'my' | 'zh' | 'ru'>('ko')
+  const { language, setLanguage, isLoaded } = useLanguage()
   const { toasts, hideToast, error } = useToast()
 
   useEffect(() => {
