@@ -5,6 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const category = searchParams.get('category')
+    const slug = searchParams.get('slug')
 
     let query = supabase
       .from('blog_posts')
@@ -13,6 +14,10 @@ export async function GET(request: NextRequest) {
 
     if (category) {
       query = query.eq('category', category)
+    }
+
+    if (slug) {
+      query = query.eq('slug', slug)
     }
 
     query = query.order('published_at', { ascending: false })
