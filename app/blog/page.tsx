@@ -129,24 +129,18 @@ export default function BlogPage() {
             onChange={(e) => setLanguage(e.target.value as any)}
             className="px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <optgroup label="1차 언어">
-              <option value="ko">🇰🇷 한국어</option>
-              <option value="en">🇺🇸 English</option>
-              <option value="vi">🇻🇳 Tiếng Việt</option>
-              <option value="th">🇹🇭 ไทย</option>
-              <option value="tl">🇵🇭 Tagalog</option>
-            </optgroup>
-            <optgroup label="2차 언어">
-              <option value="uz">🇺🇿 Oʻzbek</option>
-              <option value="ne">🇳🇵 नेपाली</option>
-              <option value="mn">🇲🇳 Монгол</option>
-              <option value="id">🇮🇩 Bahasa Indonesia</option>
-            </optgroup>
-            <optgroup label="3차 언어">
-              <option value="my">🇲🇲 မြန်မာ</option>
-              <option value="zh">🇨🇳 中文</option>
-              <option value="ru">🇷🇺 Русский</option>
-            </optgroup>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+            <option value="th">🇹🇭 ไทย</option>
+            <option value="tl">🇵🇭 Tagalog</option>
+            <option value="uz">🇺🇿 Oʻzbek</option>
+            <option value="ne">🇳🇵 नेपाली</option>
+            <option value="mn">🇲🇳 Монгол</option>
+            <option value="id">🇮🇩 Bahasa Indonesia</option>
+            <option value="my">🇲🇲 မြန်မာ</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
           </select>
         </div>
       </div>
