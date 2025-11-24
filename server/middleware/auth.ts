@@ -42,6 +42,6 @@ export function verifyToken(req: Request, res: Response, next: NextFunction) {
 
 // JWT 토큰 생성 함수
 export function generateToken(payload: Record<string, any> = {}, expiresIn: string = "30d"): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn } as jwt.SignOptions);
 }
 
