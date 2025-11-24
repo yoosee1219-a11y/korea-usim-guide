@@ -2,7 +2,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, ExternalLink, Signal, Filter, X, Compare as CompareIcon } from "lucide-react";
+import { Check, ExternalLink, Signal, Filter, X, GitCompare as CompareIcon } from "lucide-react";
 import { useState } from "react";
 import { usePlans, useComparePlans, type Plan, type PlanFilters } from "@/hooks/usePlans";
 import { Spinner } from "@/components/ui/spinner";
