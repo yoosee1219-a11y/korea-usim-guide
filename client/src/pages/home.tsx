@@ -5,14 +5,35 @@ import { ArrowRight, CheckCircle2, Smartphone, Wifi, Zap } from "lucide-react";
 import { Link } from "wouter";
 import { useTips } from "@/hooks/useTips";
 import { Spinner } from "@/components/ui/spinner";
+import { SEOHead } from "@/components/seo/SEOHead";
 import heroImage from "@assets/generated_images/diverse_travelers_in_seoul_using_smartphones.png";
 
 export default function Home() {
   // 최신 꿀팁 3개 가져오기
   const { data: tipsData, isLoading: tipsLoading } = useTips({ limit: 3, page: 1 });
   const latestTips = tipsData?.tips || [];
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "KOREAUSIMGUIDE",
+    "description": "한국 여행을 위한 완벽한 유심/eSIM 가이드",
+    "url": "https://koreausimguide.com",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://koreausimguide.com/compare?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
     <Layout>
+      <SEOHead
+        title="KOREAUSIMGUIDE - 한국 유심/eSIM 가이드 | 요금제 비교 및 통신 꿀팁"
+        description="한국 여행을 위한 완벽한 유심/eSIM 가이드. SK, KT, LG 등 통신사 요금제 비교 및 한국 통신 꿀팁을 제공합니다."
+        canonical="https://koreausimguide.com"
+        structuredData={structuredData}
+      />
       {/* Hero Section */}
       <section className="relative pt-12 pb-20 md:pt-24 md:pb-32 overflow-hidden">
         <div className="container mx-auto px-4">

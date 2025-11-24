@@ -6,6 +6,7 @@ import { Check, ExternalLink, Signal, Filter, X, GitCompare as CompareIcon } fro
 import { useState } from "react";
 import { usePlans, useComparePlans, type Plan, type PlanFilters } from "@/hooks/usePlans";
 import { Spinner } from "@/components/ui/spinner";
+import { SEOHead } from "@/components/seo/SEOHead";
 
 // 통신사 데이터 (API에서 가져올 수도 있지만 일단 하드코딩)
 const carriers = [
@@ -58,8 +59,22 @@ export default function Compare() {
     return `${gb}GB`;
   };
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "한국 유심/eSIM 요금제 비교",
+    "description": "SK, KT, LG 등 한국 통신사 요금제를 비교하고 최적의 유심/eSIM을 찾아보세요.",
+    "url": "https://koreausimguide.com/compare"
+  };
+
   return (
     <Layout>
+      <SEOHead
+        title="한국 유심/eSIM 요금제 비교 | KOREAUSIMGUIDE"
+        description="SK, KT, LG 등 한국 통신사 요금제를 비교하고 최적의 유심/eSIM을 찾아보세요. 데이터, 가격, 유효기간을 한눈에 비교할 수 있습니다."
+        canonical="https://koreausimguide.com/compare"
+        structuredData={structuredData}
+      />
       <div className="bg-secondary/30 py-12 border-b">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl font-heading font-bold mb-4">요금제 비교</h1>

@@ -7,6 +7,7 @@ import { Link } from "wouter";
 import { useState } from "react";
 import { useTips, useTipCategories, type Tip, type TipFilters } from "@/hooks/useTips";
 import { Spinner } from "@/components/ui/spinner";
+import { SEOHead } from "@/components/seo/SEOHead";
 import { format } from "date-fns";
 
 export default function Tips() {
@@ -52,8 +53,22 @@ export default function Tips() {
   const featuredTip = tips.length > 0 ? tips[0] : null;
   const otherTips = tips.slice(1);
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "한국 통신 꿀팁",
+    "description": "한국 여행과 생활에 도움이 되는 유용한 통신 정보를 확인하세요.",
+    "url": "https://koreausimguide.com/tips"
+  };
+
   return (
     <Layout>
+      <SEOHead
+        title="한국 통신 꿀팁 | KOREAUSIMGUIDE"
+        description="한국 여행과 생활에 도움이 되는 유용한 통신 정보를 확인하세요. 공항 수령, eSIM 활성화, 문제 해결 등 다양한 꿀팁을 제공합니다."
+        canonical="https://koreausimguide.com/tips"
+        structuredData={structuredData}
+      />
       <div className="bg-secondary/30 py-16 border-b">
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-heading font-bold mb-4">한국 통신 꿀팁</h1>

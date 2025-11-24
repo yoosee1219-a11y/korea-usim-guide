@@ -5,6 +5,7 @@ import { Link, useRoute } from "wouter";
 import { useTipBySlug, useTips } from "@/hooks/useTips";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
+import { SEOHead } from "@/components/seo/SEOHead";
 import ReactMarkdown from "react-markdown";
 import { format } from "date-fns";
 
@@ -65,8 +66,41 @@ export default function TipDetail() {
     );
   }
 
+  // Structured Data for Article
+  const articleStructuredData = tip ? {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": tip.title,
+    "description": tip.excerpt || tip.title,
+    "image": tip.thumbnail_url || "https://koreausimguide.com/og-image.png",
+    "datePublished": tip.published_at || tip.created_at,
+    "dateModified": tip.updated_at,
+    "author": {
+      "@type": "Organization",
+      "name": "KOREAUSIMGUIDE"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "KOREAUSIMGUIDE",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://koreausimguide.com/logo.png"
+      }
+    }
+  } : null;
+
   return (
     <Layout>
+      {tip && (
+        <SEOHead
+          title={`${tip.title} | KOREAUSIMGUIDE`}
+          description={tip.excerpt || tip.title}
+          keywords={tip.seo_meta?.keywords?.join(", ") || "한국 유심, 한국 eSIM, 한국 통신"}
+          ogImage={tip.thumbnail_url || "https://koreausimguide.com/og-image.png"}
+          canonical={`https://koreausimguide.com/tips/${tip.slug || tip.id}`}
+          structuredData={articleStructuredData}
+        />
+      )}
       <article className="min-h-screen pb-20">
         {/* Hero Image */}
         {tip.thumbnail_url && (
