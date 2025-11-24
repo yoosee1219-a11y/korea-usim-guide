@@ -2,121 +2,494 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, ExternalLink, Signal } from "lucide-react";
+import { Check, ExternalLink, Signal, Filter, X, Compare as CompareIcon } from "lucide-react";
+import { useState } from "react";
+import { usePlans, useComparePlans, type Plan, type PlanFilters } from "@/hooks/usePlans";
+import { Spinner } from "@/components/ui/spinner";
 
-const plans = [
-  {
-    id: 1,
-    provider: "SK Telecom",
-    name: "Daily Unlimited Pass",
-    type: "eSIM / USIM",
-    data: "Unlimited (3Mbps after 3GB)",
-    days: "1 / 3 / 5 / 10 / 20 / 30 Days",
-    price: "From ₩6,600",
-    features: ["Reliable Coverage", "Voice Call Option", "Free Incoming Calls"],
-    recommended: true,
-    color: "bg-orange-500"
-  },
-  {
-    id: 2,
-    provider: "KT",
-    name: "Roaming Egg (WiFi)",
-    type: "Pocket WiFi",
-    data: "Unlimited 4G/LTE",
-    days: "Rental per day",
-    price: "₩3,300 / day",
-    features: ["Connect up to 3 devices", "Pick up at Airport", "Power Bank function"],
-    recommended: false,
-    color: "bg-red-500"
-  },
-  {
-    id: 3,
-    provider: "LG U+",
-    name: "Data SIM Plan",
-    type: "USIM Only",
-    data: "Daily 3GB + Unlimited 5Mbps",
-    days: "5 / 7 / 10 Days",
-    price: "From ₩25,000",
-    features: ["T-Money Card Included", "LG U+ WiFi Zone Free", "Voice Call Support"],
-    recommended: false,
-    color: "bg-pink-600"
-  },
-  {
-    id: 4,
-    provider: "Chingu Mobile",
-    name: "Monthly Prepaid",
-    type: "USIM",
-    data: "15GB + 3Mbps Unlimited",
-    days: "30 Days",
-    price: "₩30,000",
-    features: ["Cheapest Long-term", "Chinese Support", "University Pickup"],
-    recommended: false,
-    color: "bg-blue-500"
-  }
+// 통신사 데이터 (API에서 가져올 수도 있지만 일단 하드코딩)
+const carriers = [
+  { id: "sk", name: "SK텔레콤" },
+  { id: "kt", name: "KT" },
+  { id: "lg", name: "LG유플러스" },
+  { id: "altelecom", name: "알뜰폰" },
 ];
 
 export default function Compare() {
+  const [filters, setFilters] = useState<PlanFilters>({});
+  const [selectedPlans, setSelectedPlans] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [showComparison, setShowComparison] = useState(false);
+
+  const { data: plans, isLoading, error } = usePlans(filters);
+  const { data: comparePlans } = useComparePlans(selectedPlans);
+
+  // 필터 초기화
+  const resetFilters = () => {
+    setFilters({});
+  };
+
+  // 요금제 선택/해제
+  const togglePlanSelection = (planId: string) => {
+    setSelectedPlans((prev) =>
+      prev.includes(planId)
+        ? prev.filter((id) => id !== planId)
+        : [...prev, planId]
+    );
+  };
+
+  // 비교 모달 닫기
+  const closeComparison = () => {
+    setShowComparison(false);
+    setSelectedPlans([]);
+  };
+
+  // 가격 포맷팅
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("ko-KR", {
+      style: "currency",
+      currency: "KRW",
+    }).format(price);
+  };
+
+  // 데이터량 포맷팅
+  const formatData = (gb: number | null) => {
+    if (gb === null) return "제한 없음";
+    return `${gb}GB`;
+  };
+
   return (
     <Layout>
       <div className="bg-secondary/30 py-12 border-b">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl font-heading font-bold mb-4">요금제 비교 (Plan Comparison)</h1>
+          <h1 className="text-4xl font-heading font-bold mb-4">요금제 비교</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             한국의 주요 통신사 요금제를 한눈에 비교하세요. 여행 기간과 데이터 사용량에 맞는 최적의 플랜을 찾아드립니다.
           </p>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {plans.map((plan) => (
-            <Card key={plan.id} className="flex flex-col relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-300 group">
-              {plan.recommended && (
-                <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-lg z-10">
-                  BEST CHOICE
-                </div>
-              )}
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <Badge variant="outline" className="font-normal">{plan.type}</Badge>
-                  <div className="flex items-center text-muted-foreground text-xs">
-                    <Signal className="h-3 w-3 mr-1" /> {plan.provider}
-                  </div>
-                </div>
-                <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
-                <CardDescription className="font-medium text-foreground mt-2 text-lg">
-                  {plan.price}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1">
-                <div className="space-y-4">
-                  <div className="p-4 bg-secondary/50 rounded-lg">
-                    <div className="text-sm text-muted-foreground mb-1">Data</div>
-                    <div className="font-semibold">{plan.data}</div>
-                  </div>
-                  <div className="p-4 bg-secondary/50 rounded-lg">
-                    <div className="text-sm text-muted-foreground mb-1">Duration</div>
-                    <div className="font-semibold">{plan.days}</div>
-                  </div>
-                  <ul className="space-y-2 mt-4">
-                    {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                        <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </CardContent>
-              <CardFooter className="pt-4">
-                <Button className="w-full text-base font-medium group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                  상세 보기 <ExternalLink className="ml-2 h-4 w-4" />
+      <div className="container mx-auto px-4 py-8">
+        {/* 필터 UI */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+              className="gap-2"
+            >
+              <Filter className="h-4 w-4" />
+              필터 {showFilters ? "숨기기" : "보기"}
+            </Button>
+
+            {selectedPlans.length > 0 && (
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-muted-foreground">
+                  {selectedPlans.length}개 선택됨
+                </span>
+                <Button
+                  variant="default"
+                  onClick={() => setShowComparison(true)}
+                  className="gap-2"
+                >
+                  <CompareIcon className="h-4 w-4" />
+                  비교하기
                 </Button>
-              </CardFooter>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedPlans([])}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {showFilters && (
+            <Card className="p-6 mb-4">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* 통신사 필터 */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">통신사</label>
+                  <select
+                    className="w-full px-3 py-2 border rounded-md"
+                    value={filters.carrier_id || ""}
+                    onChange={(e) =>
+                      setFilters({
+                        ...filters,
+                        carrier_id: e.target.value || undefined,
+                      })
+                    }
+                  >
+                    <option value="">전체</option>
+                    {carriers.map((carrier) => (
+                      <option key={carrier.id} value={carrier.id}>
+                        {carrier.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 데이터량 최소 */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">최소 데이터 (GB)</label>
+                  <input
+                    type="number"
+                    className="w-full px-3 py-2 border rounded-md"
+                    value={filters.dataMin || ""}
+                    onChange={(e) =>
+                      setFilters({
+                        ...filters,
+                        dataMin: e.target.value ? Number(e.target.value) : undefined,
+                      })
+                    }
+                    placeholder="예: 10"
+                  />
+                </div>
+
+                {/* 데이터량 최대 */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">최대 데이터 (GB)</label>
+                  <input
+                    type="number"
+                    className="w-full px-3 py-2 border rounded-md"
+                    value={filters.dataMax || ""}
+                    onChange={(e) =>
+                      setFilters({
+                        ...filters,
+                        dataMax: e.target.value ? Number(e.target.value) : undefined,
+                      })
+                    }
+                    placeholder="예: 50"
+                  />
+                </div>
+
+                {/* 가격 범위 */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">최대 가격 (원)</label>
+                  <input
+                    type="number"
+                    className="w-full px-3 py-2 border rounded-md"
+                    value={filters.priceMax || ""}
+                    onChange={(e) =>
+                      setFilters({
+                        ...filters,
+                        priceMax: e.target.value ? Number(e.target.value) : undefined,
+                      })
+                    }
+                    placeholder="예: 100000"
+                  />
+                </div>
+
+                {/* 공항 수령 */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">공항 수령</label>
+                  <select
+                    className="w-full px-3 py-2 border rounded-md"
+                    value={filters.airport_pickup === undefined ? "" : filters.airport_pickup ? "true" : "false"}
+                    onChange={(e) =>
+                      setFilters({
+                        ...filters,
+                        airport_pickup: e.target.value === "" ? undefined : e.target.value === "true",
+                      })
+                    }
+                  >
+                    <option value="">전체</option>
+                    <option value="true">가능</option>
+                    <option value="false">불가능</option>
+                  </select>
+                </div>
+
+                {/* eSIM 지원 */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">eSIM 지원</label>
+                  <select
+                    className="w-full px-3 py-2 border rounded-md"
+                    value={filters.esim_support === undefined ? "" : filters.esim_support ? "true" : "false"}
+                    onChange={(e) =>
+                      setFilters({
+                        ...filters,
+                        esim_support: e.target.value === "" ? undefined : e.target.value === "true",
+                      })
+                    }
+                  >
+                    <option value="">전체</option>
+                    <option value="true">지원</option>
+                    <option value="false">미지원</option>
+                  </select>
+                </div>
+
+                {/* 인기 요금제 */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">인기 요금제</label>
+                  <select
+                    className="w-full px-3 py-2 border rounded-md"
+                    value={filters.is_popular === undefined ? "" : filters.is_popular ? "true" : "false"}
+                    onChange={(e) =>
+                      setFilters({
+                        ...filters,
+                        is_popular: e.target.value === "" ? undefined : e.target.value === "true",
+                      })
+                    }
+                  >
+                    <option value="">전체</option>
+                    <option value="true">인기만</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-4">
+                <Button onClick={resetFilters} variant="outline" size="sm">
+                  필터 초기화
+                </Button>
+              </div>
             </Card>
-          ))}
+          )}
         </div>
+
+        {/* 로딩 상태 */}
+        {isLoading && (
+          <div className="flex justify-center items-center py-12">
+            <Spinner />
+          </div>
+        )}
+
+        {/* 에러 상태 */}
+        {error && (
+          <div className="text-center py-12 text-red-500">
+            요금제를 불러오는데 실패했습니다. 다시 시도해주세요.
+          </div>
+        )}
+
+        {/* 요금제 목록 */}
+        {!isLoading && !error && plans && plans.length > 0 && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {plans.map((plan) => (
+              <Card
+                key={plan.id}
+                className={`flex flex-col relative overflow-hidden border-2 transition-all duration-300 group ${
+                  selectedPlans.includes(plan.id)
+                    ? "border-primary ring-2 ring-primary"
+                    : "hover:border-primary/50"
+                }`}
+              >
+                {plan.is_popular && (
+                  <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-lg z-10">
+                    인기
+                  </div>
+                )}
+
+                {/* 선택 체크박스 */}
+                <div className="absolute top-2 left-2 z-10">
+                  <input
+                    type="checkbox"
+                    checked={selectedPlans.includes(plan.id)}
+                    onChange={() => togglePlanSelection(plan.id)}
+                    className="w-5 h-5 rounded border-primary text-primary focus:ring-primary"
+                  />
+                </div>
+
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant="outline" className="font-normal">
+                      {plan.plan_type === "prepaid"
+                        ? "선불"
+                        : plan.plan_type === "esim"
+                        ? "eSIM"
+                        : "선불/eSIM"}
+                    </Badge>
+                    <div className="flex items-center text-muted-foreground text-xs">
+                      <Signal className="h-3 w-3 mr-1" /> {plan.carrier_name_ko}
+                    </div>
+                  </div>
+                  <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
+                  <CardDescription className="font-medium text-foreground mt-2 text-lg">
+                    {formatPrice(plan.price_krw)}
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="flex-1">
+                  <div className="space-y-4">
+                    <div className="p-4 bg-secondary/50 rounded-lg">
+                      <div className="text-sm text-muted-foreground mb-1">데이터</div>
+                      <div className="font-semibold">{formatData(plan.data_amount_gb)}</div>
+                    </div>
+
+                    <div className="p-4 bg-secondary/50 rounded-lg">
+                      <div className="text-sm text-muted-foreground mb-1">유효기간</div>
+                      <div className="font-semibold">{plan.validity_days}일</div>
+                    </div>
+
+                    {plan.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {plan.description}
+                      </p>
+                    )}
+
+                    {plan.features && plan.features.length > 0 && (
+                      <ul className="space-y-2 mt-4">
+                        {plan.features.slice(0, 3).map((feature, i) => (
+                          <li
+                            key={i}
+                            className="flex items-start gap-2 text-sm text-muted-foreground"
+                          >
+                            <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      {plan.airport_pickup && (
+                        <Badge variant="secondary" className="text-xs">
+                          공항 수령
+                        </Badge>
+                      )}
+                      {plan.esim_support && (
+                        <Badge variant="secondary" className="text-xs">
+                          eSIM
+                        </Badge>
+                      )}
+                      {plan.physical_sim && (
+                        <Badge variant="secondary" className="text-xs">
+                          물리 유심
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+
+                <CardFooter className="pt-4">
+                  <Button
+                    className="w-full text-base font-medium group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                    onClick={() => togglePlanSelection(plan.id)}
+                  >
+                    {selectedPlans.includes(plan.id) ? "선택 해제" : "비교에 추가"}
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* 요금제 없음 */}
+        {!isLoading && !error && plans && plans.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground">
+            조건에 맞는 요금제가 없습니다. 필터를 조정해보세요.
+          </div>
+        )}
       </div>
+
+      {/* 비교 모달 */}
+      {showComparison && comparePlans && comparePlans.length > 0 && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl">요금제 비교</CardTitle>
+                <Button variant="ghost" size="icon" onClick={closeComparison}>
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-4 font-bold">항목</th>
+                      {comparePlans.map((plan) => (
+                        <th key={plan.id} className="text-left p-4 font-bold">
+                          {plan.name}
+                          <div className="text-sm font-normal text-muted-foreground">
+                            {plan.carrier_name_ko}
+                          </div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b">
+                      <td className="p-4 font-semibold">가격</td>
+                      {comparePlans.map((plan) => (
+                        <td key={plan.id} className="p-4">
+                          {formatPrice(plan.price_krw)}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr className="border-b">
+                      <td className="p-4 font-semibold">데이터</td>
+                      {comparePlans.map((plan) => (
+                        <td key={plan.id} className="p-4">
+                          {formatData(plan.data_amount_gb)}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr className="border-b">
+                      <td className="p-4 font-semibold">유효기간</td>
+                      {comparePlans.map((plan) => (
+                        <td key={plan.id} className="p-4">
+                          {plan.validity_days}일
+                        </td>
+                      ))}
+                    </tr>
+                    <tr className="border-b">
+                      <td className="p-4 font-semibold">요금제 유형</td>
+                      {comparePlans.map((plan) => (
+                        <td key={plan.id} className="p-4">
+                          {plan.plan_type === "prepaid"
+                            ? "선불"
+                            : plan.plan_type === "esim"
+                            ? "eSIM"
+                            : "선불/eSIM"}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr className="border-b">
+                      <td className="p-4 font-semibold">공항 수령</td>
+                      {comparePlans.map((plan) => (
+                        <td key={plan.id} className="p-4">
+                          {plan.airport_pickup ? "✓ 가능" : "✗ 불가능"}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr className="border-b">
+                      <td className="p-4 font-semibold">eSIM 지원</td>
+                      {comparePlans.map((plan) => (
+                        <td key={plan.id} className="p-4">
+                          {plan.esim_support ? "✓ 지원" : "✗ 미지원"}
+                        </td>
+                      ))}
+                    </tr>
+                    {comparePlans.some((p) => p.features && p.features.length > 0) && (
+                      <tr className="border-b">
+                        <td className="p-4 font-semibold">특장점</td>
+                        {comparePlans.map((plan) => (
+                          <td key={plan.id} className="p-4">
+                            {plan.features && plan.features.length > 0 ? (
+                              <ul className="list-disc list-inside space-y-1">
+                                {plan.features.map((feature, i) => (
+                                  <li key={i} className="text-sm">
+                                    {feature}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </Layout>
   );
 }

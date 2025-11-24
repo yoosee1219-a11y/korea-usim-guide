@@ -1,3 +1,6 @@
+// .env 파일 로드 (가장 먼저 실행되어야 함)
+import "dotenv/config";
+
 import fs from "node:fs";
 import { type Server } from "node:http";
 import path from "node:path";
@@ -33,7 +36,14 @@ export async function setupVite(app: Express, server: Server) {
     appType: "custom",
   });
 
-  app.use(vite.middlewares);
+  // Vite 미들웨어: 정적 파일 서빙 (API 라우트 제외)
+  app.use((req, res, next) => {
+    // API 라우트는 건너뛰기
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    vite.middlewares(req, res, next);
+  });
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 

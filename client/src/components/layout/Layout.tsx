@@ -1,27 +1,12 @@
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { Globe, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-const languages = [
-  { code: "ko", label: "Korean" },
-  { code: "en", label: "English" },
-  { code: "zh", label: "Chinese" },
-  { code: "vi", label: "Vietnamese" },
-  { code: "uz", label: "Uzbek" },
-];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [currentLang, setCurrentLang] = useState(languages[0]);
 
   const navItems = [
     { href: "/compare", label: "요금제 비교" },
@@ -56,27 +41,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Language Selector */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2 hidden md:flex" data-testid="btn-lang-selector">
-                  <Globe className="h-4 w-4" />
-                  <span>{currentLang.label}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {languages.map((lang) => (
-                  <DropdownMenuItem 
-                    key={lang.code}
-                    onClick={() => setCurrentLang(lang)}
-                    className="cursor-pointer"
-                  >
-                    {lang.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
             {/* Mobile Menu Toggle */}
             <Button 
               variant="ghost" 
@@ -106,25 +70,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   </a>
                 </Link>
               ))}
-              <div className="border-t pt-4 mt-2">
-                <div className="text-sm font-medium text-muted-foreground mb-2 px-2">Language</div>
-                <div className="grid grid-cols-2 gap-2">
-                  {languages.map((lang) => (
-                    <Button
-                      key={lang.code}
-                      variant={currentLang.code === lang.code ? "secondary" : "ghost"}
-                      size="sm"
-                      className="justify-start"
-                      onClick={() => {
-                        setCurrentLang(lang);
-                        setIsMobileMenuOpen(false);
-                      }}
-                    >
-                      {lang.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
             </nav>
           </div>
         )}

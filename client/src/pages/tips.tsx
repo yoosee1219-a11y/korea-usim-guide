@@ -2,68 +2,61 @@ import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, ChevronRight } from "lucide-react";
+import { Calendar, Clock, ChevronRight, Filter } from "lucide-react";
 import { Link } from "wouter";
-
-const tips = [
-  {
-    id: 1,
-    title: "인천공항 유심 수령 완벽 가이드",
-    excerpt: "인천공항 제1터미널, 제2터미널 통신사 부스 위치와 영업시간, 수령 시 필요한 준비물을 정리해 드립니다.",
-    category: "Airport Guide",
-    date: "2025.05.20",
-    readTime: "5 min read",
-    featured: true,
-    image: "https://images.unsplash.com/photo-1580828343064-fde4fc206bc6?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: 2,
-    title: "eSIM vs USIM: 나에게 맞는 것은?",
-    excerpt: "물리 유심 교체의 번거로움이 없는 eSIM과 안정적인 물리 유심의 장단점을 비교 분석합니다.",
-    category: "Comparison",
-    date: "2025.05.18",
-    readTime: "4 min read",
-    featured: false,
-    image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: 3,
-    title: "한국 무료 와이파이 사용 꿀팁",
-    excerpt: "지하철, 카페, 공공장소에서 무료 와이파이를 안전하게 사용하는 방법과 접속 가이드.",
-    category: "WiFi Tips",
-    date: "2025.05.15",
-    readTime: "3 min read",
-    featured: false,
-    image: "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: 4,
-    title: "본인인증(Identity Verification)이란?",
-    excerpt: "한국 장기 체류 시 필수적인 휴대폰 본인인증 서비스에 대한 이해와 선불유심으로 인증하는 법.",
-    category: "Living in Korea",
-    date: "2025.05.10",
-    readTime: "6 min read",
-    featured: false,
-    image: "https://images.unsplash.com/photo-1555421689-d68471e18963?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: 5,
-    title: "긴급 상황 시 유용한 전화번호",
-    excerpt: "112, 119 등 한국 여행 중 위급 상황 발생 시 알아두어야 할 필수 긴급 전화번호 목록.",
-    category: "Safety",
-    date: "2025.05.01",
-    readTime: "2 min read",
-    featured: false,
-    image: "https://images.unsplash.com/photo-1595248438190-7f46435707d6?auto=format&fit=crop&q=80&w=800"
-  }
-];
+import { useState } from "react";
+import { useTips, useTipCategories, type Tip, type TipFilters } from "@/hooks/useTips";
+import { Spinner } from "@/components/ui/spinner";
+import { format } from "date-fns";
 
 export default function Tips() {
+  const [filters, setFilters] = useState<TipFilters>({ page: 1, limit: 10 });
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
+
+  const { data: tipsData, isLoading } = useTips({
+    ...filters,
+    category_id: selectedCategory,
+  });
+
+  const { data: categories } = useTipCategories();
+
+  const tips = tipsData?.tips || [];
+  const total = tipsData?.total || 0;
+  const currentPage = tipsData?.page || 1;
+  const limit = tipsData?.limit || 10;
+  const totalPages = Math.ceil(total / limit);
+
+  // 카테고리 필터 변경
+  const handleCategoryChange = (categoryId: string | undefined) => {
+    setSelectedCategory(categoryId);
+    setFilters({ ...filters, page: 1 }); // 카테고리 변경 시 첫 페이지로
+  };
+
+  // 페이지 변경
+  const handlePageChange = (page: number) => {
+    setFilters({ ...filters, page });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // 날짜 포맷팅
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "";
+    try {
+      return format(new Date(dateString), "yyyy.MM.dd");
+    } catch {
+      return dateString;
+    }
+  };
+
+  // 최신 꿀팁 (첫 번째, featured처럼 표시)
+  const featuredTip = tips.length > 0 ? tips[0] : null;
+  const otherTips = tips.slice(1);
+
   return (
     <Layout>
       <div className="bg-secondary/30 py-16 border-b">
         <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-heading font-bold mb-4">한국 통신 꿀팁 (Telecom Tips)</h1>
+          <h1 className="text-4xl font-heading font-bold mb-4">한국 통신 꿀팁</h1>
           <p className="text-muted-foreground text-lg max-w-2xl">
             한국 여행과 생활에 도움이 되는 유용한 통신 정보를 확인하세요.
           </p>
@@ -71,55 +64,191 @@ export default function Tips() {
       </div>
 
       <div className="container mx-auto px-4 py-12">
-        <div className="grid lg:grid-cols-2 gap-8 mb-12">
-          {tips.filter(t => t.featured).map(tip => (
-            <Link key={tip.id} href={`/tips/${tip.id}`}>
+        {/* 카테고리 필터 */}
+        {categories && categories.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">카테고리</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={!selectedCategory ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleCategoryChange(undefined)}
+              >
+                전체
+              </Button>
+              {categories.map((category) => (
+                <Button
+                  key={category.id}
+                  variant={selectedCategory === category.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleCategoryChange(category.id)}
+                >
+                  {category.name}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 로딩 상태 */}
+        {isLoading && (
+          <div className="flex justify-center items-center py-12">
+            <Spinner />
+          </div>
+        )}
+
+        {/* Featured Tip (최신) */}
+        {!isLoading && featuredTip && (
+          <div className="grid lg:grid-cols-2 gap-8 mb-12">
+            <Link href={`/tips/${featuredTip.slug}`}>
               <div className="group relative rounded-2xl overflow-hidden aspect-video lg:aspect-[2/1] border cursor-pointer">
-                <img src={tip.image} alt={tip.title} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105" />
+                {featuredTip.thumbnail_url ? (
+                  <img
+                    src={featuredTip.thumbnail_url}
+                    alt={featuredTip.title}
+                    className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-secondary/50 flex items-center justify-center">
+                    <span className="text-muted-foreground">이미지 없음</span>
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-6 flex flex-col justify-end text-white">
-                  <Badge className="w-fit mb-3 bg-primary hover:bg-primary/90 border-none text-primary-foreground">
-                    {tip.category}
-                  </Badge>
-                  <h2 className="text-2xl font-bold mb-2 group-hover:text-primary-foreground transition-colors">{tip.title}</h2>
-                  <p className="text-gray-300 line-clamp-2 mb-4">{tip.excerpt}</p>
+                  {featuredTip.category_name && (
+                    <Badge className="w-fit mb-3 bg-primary hover:bg-primary/90 border-none text-primary-foreground">
+                      {featuredTip.category_name}
+                    </Badge>
+                  )}
+                  <h2 className="text-2xl font-bold mb-2 group-hover:text-primary-foreground transition-colors">
+                    {featuredTip.title}
+                  </h2>
+                  {featuredTip.excerpt && (
+                    <p className="text-gray-300 line-clamp-2 mb-4">{featuredTip.excerpt}</p>
+                  )}
                   <div className="flex items-center text-sm text-gray-400 gap-4">
-                    <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {tip.date}</span>
-                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {tip.readTime}</span>
+                    {featuredTip.published_at && (
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" /> {formatDate(featuredTip.published_at)}
+                      </span>
+                    )}
+                    <span>조회수: {featuredTip.view_count}</span>
                   </div>
                 </div>
               </div>
             </Link>
-          ))}
-        </div>
+          </div>
+        )}
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {tips.filter(t => !t.featured).map(tip => (
-            <Link key={tip.id} href={`/tips/${tip.id}`}>
-              <Card className="h-full hover:shadow-lg transition-all cursor-pointer group hover:-translate-y-1">
-                <div className="aspect-video relative overflow-hidden rounded-t-xl">
-                  <img src={tip.image} alt={tip.title} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105" />
-                </div>
-                <CardHeader>
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge variant="secondary" className="text-xs font-normal">{tip.category}</Badge>
-                    <span className="text-xs text-muted-foreground">{tip.date}</span>
-                  </div>
-                  <CardTitle className="line-clamp-2 text-lg group-hover:text-primary transition-colors">{tip.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="line-clamp-3">
-                    {tip.excerpt}
-                  </CardDescription>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="ghost" className="w-full justify-between text-muted-foreground group-hover:text-primary">
-                    Read More <ChevronRight className="h-4 w-4" />
+        {/* 다른 꿀팁 목록 */}
+        {!isLoading && otherTips.length > 0 && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            {otherTips.map((tip) => (
+              <Link key={tip.id} href={`/tips/${tip.slug}`}>
+                <Card className="h-full hover:shadow-lg transition-all cursor-pointer group hover:-translate-y-1">
+                  {tip.thumbnail_url && (
+                    <div className="aspect-video relative overflow-hidden rounded-t-xl">
+                      <img
+                        src={tip.thumbnail_url}
+                        alt={tip.title}
+                        className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
+                  )}
+                  <CardHeader>
+                    <div className="flex items-center justify-between mb-2">
+                      {tip.category_name && (
+                        <Badge variant="secondary" className="text-xs font-normal">
+                          {tip.category_name}
+                        </Badge>
+                      )}
+                      {tip.published_at && (
+                        <span className="text-xs text-muted-foreground">
+                          {formatDate(tip.published_at)}
+                        </span>
+                      )}
+                    </div>
+                    <CardTitle className="line-clamp-2 text-lg group-hover:text-primary transition-colors">
+                      {tip.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {tip.excerpt && (
+                      <CardDescription className="line-clamp-3">{tip.excerpt}</CardDescription>
+                    )}
+                    <div className="mt-4 text-xs text-muted-foreground">
+                      조회수: {tip.view_count}
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-between text-muted-foreground group-hover:text-primary"
+                    >
+                      더 보기 <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* 꿀팁 없음 */}
+        {!isLoading && tips.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground">
+            등록된 꿀팁이 없습니다.
+          </div>
+        )}
+
+        {/* 페이지네이션 */}
+        {!isLoading && totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-8">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              이전
+            </Button>
+            <div className="flex gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum: number;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePageChange(pageNum)}
+                  >
+                    {pageNum}
                   </Button>
-                </CardFooter>
-              </Card>
-            </Link>
-          ))}
-        </div>
+                );
+              })}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              다음
+            </Button>
+          </div>
+        )}
       </div>
     </Layout>
   );
