@@ -20,6 +20,7 @@ router.post("/", async (req, res) => {
     if (body.priceMin !== undefined) filters.priceMin = Number(body.priceMin);
     if (body.priceMax !== undefined) filters.priceMax = Number(body.priceMax);
     if (body.plan_type) filters.plan_type = body.plan_type;
+    if (body.payment_type) filters.payment_type = body.payment_type;
     if (body.airport_pickup !== undefined) filters.airport_pickup = Boolean(body.airport_pickup);
     if (body.esim_support !== undefined) filters.esim_support = Boolean(body.esim_support);
     if (body.is_popular !== undefined) filters.is_popular = Boolean(body.is_popular);

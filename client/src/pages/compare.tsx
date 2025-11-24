@@ -235,6 +235,25 @@ export default function Compare() {
                   </select>
                 </div>
 
+                {/* 결제 방식 (선불/후불) */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">결제 방식</label>
+                  <select
+                    className="w-full px-3 py-2 border rounded-md"
+                    value={filters.payment_type || ""}
+                    onChange={(e) =>
+                      setFilters({
+                        ...filters,
+                        payment_type: e.target.value || undefined,
+                      })
+                    }
+                  >
+                    <option value="">전체</option>
+                    <option value="prepaid">선불</option>
+                    <option value="postpaid">후불</option>
+                  </select>
+                </div>
+
                 {/* 인기 요금제 */}
                 <div>
                   <label className="text-sm font-medium mb-2 block">인기 요금제</label>
@@ -307,13 +326,18 @@ export default function Compare() {
 
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between mb-2">
-                    <Badge variant="outline" className="font-normal">
-                      {plan.plan_type === "prepaid"
-                        ? "선불"
-                        : plan.plan_type === "esim"
-                        ? "eSIM"
-                        : "선불/eSIM"}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="font-normal">
+                        {plan.payment_type === "prepaid" ? "선불" : "후불"}
+                      </Badge>
+                      <Badge variant="outline" className="font-normal">
+                        {plan.plan_type === "prepaid"
+                          ? "선불"
+                          : plan.plan_type === "esim"
+                          ? "eSIM"
+                          : "선불/eSIM"}
+                      </Badge>
+                    </div>
                     <div className="flex items-center text-muted-foreground text-xs">
                       <Signal className="h-3 w-3 mr-1" /> {plan.carrier_name_ko}
                     </div>
@@ -447,6 +471,14 @@ export default function Compare() {
                       {comparePlans.map((plan) => (
                         <td key={plan.id} className="p-4">
                           {plan.validity_days}일
+                        </td>
+                      ))}
+                    </tr>
+                    <tr className="border-b">
+                      <td className="p-4 font-semibold">결제 방식</td>
+                      {comparePlans.map((plan) => (
+                        <td key={plan.id} className="p-4">
+                          {plan.payment_type === "prepaid" ? "선불" : "후불"}
                         </td>
                       ))}
                     </tr>

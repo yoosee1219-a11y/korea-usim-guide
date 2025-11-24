@@ -4,6 +4,7 @@ export interface Plan {
   id: string;
   carrier_id: string;
   plan_type: string;
+  payment_type: string; // 'prepaid' (선불) or 'postpaid' (후불)
   name: string;
   description: string | null;
   data_amount_gb: number | null;
@@ -30,6 +31,7 @@ export interface PlanFilters {
   priceMin?: number;
   priceMax?: number;
   plan_type?: string;
+  payment_type?: string; // 'prepaid' (선불) or 'postpaid' (후불)
   airport_pickup?: boolean;
   esim_support?: boolean;
   is_popular?: boolean;
@@ -74,6 +76,11 @@ export async function getPlans(filters: PlanFilters = {}): Promise<Plan[]> {
   if (filters.plan_type) {
     conditions.push(`p.plan_type = $${paramIndex++}`);
     params.push(filters.plan_type);
+  }
+
+  if (filters.payment_type) {
+    conditions.push(`p.payment_type = $${paramIndex++}`);
+    params.push(filters.payment_type);
   }
 
   if (filters.airport_pickup !== undefined) {
