@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "korea-usim-guide-secret-key-change-in-production";
+const JWT_SECRET: string = process.env.JWT_SECRET || "korea-usim-guide-secret-key-change-in-production";
 
 // JWT 토큰 검증 미들웨어
 export function verifyToken(req: Request, res: Response, next: NextFunction) {
