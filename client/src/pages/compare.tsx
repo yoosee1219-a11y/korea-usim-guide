@@ -4,6 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { Badge } from "@/components/ui/badge";
 import { Check, ExternalLink, Signal, Filter, X, GitCompare as CompareIcon } from "lucide-react";
 import { useState } from "react";
+import { Link } from "wouter";
 import { usePlans, useComparePlans, type Plan, type PlanFilters } from "@/hooks/usePlans";
 import { Spinner } from "@/components/ui/spinner";
 import { SEOHead } from "@/components/seo/SEOHead";
@@ -400,9 +401,14 @@ export default function Compare() {
                   </div>
                 </CardContent>
 
-                <CardFooter className="pt-4">
+                <CardFooter className="pt-4 flex gap-2">
+                  <Link href={`/plans/${plan.id}`} className="flex-1">
+                    <Button variant="outline" className="w-full">
+                      상세보기
+                    </Button>
+                  </Link>
                   <Button
-                    className="w-full text-base font-medium group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                    className="flex-1 text-base font-medium group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
                     onClick={() => togglePlanSelection(plan.id)}
                   >
                     {selectedPlans.includes(plan.id) ? "선택 해제" : "비교에 추가"}

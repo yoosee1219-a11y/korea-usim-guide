@@ -10,6 +10,7 @@ import { Spinner } from "@/components/ui/spinner";
 // 페이지 컴포넌트를 동적으로 로드 (코드 스플리팅)
 const Home = lazy(() => import("@/pages/home"));
 const Compare = lazy(() => import("@/pages/compare"));
+const PlanDetail = lazy(() => import("@/pages/plan-detail"));
 const Tips = lazy(() => import("@/pages/tips"));
 const TipDetail = lazy(() => import("@/pages/tip-detail"));
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -29,6 +30,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/compare" component={Compare} />
+        <Route path="/plans/:id" component={PlanDetail} />
         <Route path="/tips" component={Tips} />
         <Route path="/tips/:id" component={TipDetail} />
         <Route component={NotFound} />
