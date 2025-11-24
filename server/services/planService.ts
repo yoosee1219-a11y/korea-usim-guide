@@ -81,9 +81,9 @@ export async function getPlans(filters: PlanFilters = {}): Promise<Plan[]> {
     params.push(filters.airport_pickup);
   }
 
-  if (filters.eSIM_support !== undefined) {
+  if (filters.esim_support !== undefined) {
     conditions.push(`p.esim_support = $${paramIndex++}`);
-    params.push(filters.eSIM_support);
+    params.push(filters.esim_support);
   }
 
   if (filters.is_popular !== undefined) {
