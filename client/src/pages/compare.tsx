@@ -156,10 +156,10 @@ export default function Compare() {
             </Button>
           </div>
 
-          {/* 비교하기 버튼 - 스크롤 따라오는 sticky 버튼 */}
+          {/* 비교하기 버튼 - 스크롤 따라오는 fixed 버튼 */}
           {selectedPlans.length > 0 && (
-            <div className="sticky top-4 z-40 mb-6">
-              <div className="flex items-center justify-center gap-3 bg-background/95 backdrop-blur-md border-2 border-primary/20 rounded-xl p-4 shadow-xl max-w-fit mx-auto">
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 duration-300">
+              <div className="flex items-center justify-center gap-3 bg-background/95 backdrop-blur-md border-2 border-primary/30 rounded-xl p-4 shadow-2xl max-w-fit">
                 <span className="text-sm font-semibold text-foreground bg-primary/10 px-4 py-2 rounded-full border border-primary/30">
                   {selectedPlans.length}개 선택됨
                 </span>
