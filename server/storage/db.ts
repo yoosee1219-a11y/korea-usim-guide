@@ -1,45 +1,72 @@
-import { Pool } from "pg";
+import { Pool, Client } from "pg";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL environment variable is required");
 }
 
-// PostgreSQL 연결 풀 생성 (ORM 제거, Raw SQL 사용)
-// 성능 최적화: 연결 풀 설정 (Vercel Serverless 환경 고려)
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === "production" 
-    ? { rejectUnauthorized: false } 
-    : false,
-  // Vercel Serverless 환경에 최적화된 설정
-  // 중요: Supabase Session Pooler는 제한된 연결 수를 가지므로, 
-  // Serverless에서는 각 인스턴스마다 1개 연결만 사용
-  max: 1, // 최대 연결 수를 1로 제한 (Session Pooler 제한 회피)
-  // min은 Serverless에서 제거 (요청마다 새 인스턴스 생성 가능)
-  idleTimeoutMillis: 10000, // 10초로 단축 (빠른 연결 해제)
-  connectionTimeoutMillis: 30000, // 30초
-  // 연결 유지 설정
-  keepAlive: true,
-  keepAliveInitialDelayMillis: 10000,
-});
+// Vercel Serverless 환경에 최적화된 연결 관리
+// Session Pooler 제한 문제를 해결하기 위해 매 요청마다 새 연결 생성
+// 또는 Transaction Pooler 사용 (포트 6543)
 
-// 연결 풀 이벤트 핸들러 (에러 추적)
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
-});
+// DATABASE_URL이 Transaction Pooler인지 확인 (포트 6543)
+const isTransactionPooler = process.env.DATABASE_URL.includes(':6543/');
 
-pool.on('connect', () => {
-  console.log('Database connection established');
-});
+// Transaction Pooler를 사용하는 경우 연결 풀 사용
+// Session Pooler를 사용하는 경우 매 요청마다 새 연결 생성
+let pool: Pool | null = null;
 
-pool.on('remove', () => {
-  console.log('Database connection removed from pool');
-});
+if (isTransactionPooler) {
+  // Transaction Pooler: 연결 풀 사용 가능 (더 많은 동시 연결 지원)
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === "production" 
+      ? { rejectUnauthorized: false } 
+      : false,
+    max: 5, // Transaction Pooler는 더 많은 연결 지원
+    idleTimeoutMillis: 10000,
+    connectionTimeoutMillis: 30000,
+  });
+
+  pool.on('error', (err) => {
+    console.error('Unexpected error on idle client', err);
+  });
+} else {
+  // Session Pooler: 연결 풀 사용하지 않음 (매 요청마다 새 연결)
+  console.log('Using Session Pooler - connections will be created per request');
+}
+
+// 쿼리 실행 함수 (연결 풀 또는 새 연결 사용)
+async function executeQuery<T>(queryFn: (client: Client | Pool) => Promise<T>): Promise<T> {
+  if (pool) {
+    // Transaction Pooler: 풀 사용
+    return await queryFn(pool);
+  } else {
+    // Session Pooler: 매 요청마다 새 연결 생성 및 즉시 종료
+    const client = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.NODE_ENV === "production" 
+        ? { rejectUnauthorized: false } 
+        : false,
+      connectionTimeoutMillis: 30000,
+    });
+
+    try {
+      await client.connect();
+      const result = await queryFn(client);
+      return result;
+    } finally {
+      // 연결 즉시 종료 (연결 누적 방지)
+      await client.end().catch(() => {});
+    }
+  }
+}
 
 // 연결 테스트 함수
 export async function testConnection(): Promise<boolean> {
   try {
-    const result = await pool.query("SELECT NOW()");
+    const result = await executeQuery(async (db) => {
+      return await db.query("SELECT NOW()");
+    });
     console.log("Database connection successful:", result.rows[0].now);
     return true;
   } catch (error) {
@@ -48,11 +75,20 @@ export async function testConnection(): Promise<boolean> {
   }
 }
 
-// pg.Pool export (Raw SQL 사용)
-export const db = pool;
+// db 객체 (쿼리 실행)
+export const db = {
+  query: async (text: string, params?: any[]) => {
+    return await executeQuery(async (db) => {
+      return await db.query(text, params);
+    });
+  }
+};
 
 // 연결 풀 종료 함수 (앱 종료 시 사용)
 export async function closeConnection() {
-  await pool.end();
+  if (pool) {
+    await pool.end();
+    pool = null;
+  }
 }
 
