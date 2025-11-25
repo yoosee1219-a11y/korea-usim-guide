@@ -5,8 +5,12 @@ import authRouter from "./routes/auth.js";
 import carriersRouter from "./routes/carriers.js";
 import plansRouter from "./routes/plans.js";
 import tipsRouter from "./routes/tips.js";
+import sitemapRouter from "./routes/sitemap.js";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Sitemap 라우트 (인증 불필요, 먼저 등록하여 /api보다 우선)
+  app.use("/", sitemapRouter);
+  
   // API 라우트 등록 (모두 /api 접두사 사용)
   app.use("/api/auth", authRouter);
   app.use("/api/carriers", carriersRouter);

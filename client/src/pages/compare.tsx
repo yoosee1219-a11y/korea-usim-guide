@@ -60,13 +60,34 @@ export default function Compare() {
     return `${gb}GB`;
   };
 
-  const structuredData = {
+  const breadcrumbStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "홈",
+        "item": "https://koreausimguide.com"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "요금제 비교",
+        "item": "https://koreausimguide.com/compare"
+      }
+    ]
+  };
+
+  const webPageStructuredData = {
     "@context": "https://schema.org",
     "@type": "WebPage",
     "name": "한국 유심/eSIM 요금제 비교",
     "description": "SK, KT, LG 등 한국 통신사 요금제를 비교하고 최적의 유심/eSIM을 찾아보세요.",
     "url": "https://koreausimguide.com/compare"
   };
+
+  const structuredData = [breadcrumbStructuredData, webPageStructuredData];
 
   return (
     <Layout>

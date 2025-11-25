@@ -66,13 +66,39 @@ export default function TipDetail() {
     );
   }
 
+  // Breadcrumb Structured Data
+  const breadcrumbStructuredData = tip ? {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "홈",
+        "item": "https://koreausimguide.com"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "한국 통신 꿀팁",
+        "item": "https://koreausimguide.com/tips"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": tip.title,
+        "item": `https://koreausimguide.com/tips/${tip.slug || tip.id}`
+      }
+    ]
+  } : null;
+
   // Structured Data for Article
   const articleStructuredData = tip ? {
     "@context": "https://schema.org",
     "@type": "Article",
     "headline": tip.title,
     "description": tip.excerpt || tip.title,
-    "image": tip.thumbnail_url || "https://koreausimguide.com/og-image.png",
+    "image": tip.thumbnail_url || "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png",
     "datePublished": tip.published_at || tip.created_at,
     "dateModified": tip.updated_at,
     "author": {
@@ -84,10 +110,15 @@ export default function TipDetail() {
       "name": "KOREAUSIMGUIDE",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://koreausimguide.com/logo.png"
+        "url": "https://koreausimguide.com/favicon.png"
       }
     }
   } : null;
+
+  // 여러 구조화된 데이터를 배열로 결합
+  const combinedStructuredData = tip && breadcrumbStructuredData && articleStructuredData
+    ? [breadcrumbStructuredData, articleStructuredData]
+    : null;
 
   return (
     <Layout>
@@ -96,9 +127,10 @@ export default function TipDetail() {
           title={`${tip.title} | KOREAUSIMGUIDE`}
           description={tip.excerpt || tip.title}
           keywords={tip.seo_meta?.keywords?.join(", ") || "한국 유심, 한국 eSIM, 한국 통신"}
-          ogImage={tip.thumbnail_url || "https://koreausimguide.com/og-image.png"}
+          ogType="article"
+          ogImage={tip.thumbnail_url || "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png"}
           canonical={`https://koreausimguide.com/tips/${tip.slug || tip.id}`}
-          structuredData={articleStructuredData}
+          structuredData={combinedStructuredData}
         />
       )}
       <article className="min-h-screen pb-20">

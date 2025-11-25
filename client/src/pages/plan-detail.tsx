@@ -44,6 +44,31 @@ export default function PlanDetail() {
     );
   }
 
+  const breadcrumbStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "홈",
+        "item": "https://koreausimguide.com"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "요금제 비교",
+        "item": "https://koreausimguide.com/compare"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": plan.name,
+        "item": `https://koreausimguide.com/plans/${plan.id}`
+      }
+    ]
+  };
+
   const productStructuredData = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -57,13 +82,17 @@ export default function PlanDetail() {
     }
   };
 
+  // 여러 구조화된 데이터를 배열로 결합
+  const combinedStructuredData = [breadcrumbStructuredData, productStructuredData];
+
   return (
     <Layout>
       <SEOHead
         title={`${plan.name} | KOREAUSIMGUIDE`}
         description={plan.description || `${plan.name} - ${formatPrice(plan.price_krw)}`}
+        ogType="product"
         canonical={`https://koreausimguide.com/plans/${plan.id}`}
-        structuredData={productStructuredData}
+        structuredData={combinedStructuredData}
       />
       
       <div className="min-h-screen pb-20">
