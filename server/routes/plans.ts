@@ -29,7 +29,18 @@ router.post("/", async (req, res) => {
     res.json({ plans });
   } catch (error) {
     console.error("Error fetching plans:", error);
-    res.status(500).json({ message: "Failed to fetch plans" });
+    // 에러 상세 정보 로깅 (프로덕션에서는 민감 정보 제외)
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error("Error details:", {
+      message: errorMessage,
+      stack: errorStack,
+      filters,
+    });
+    res.status(500).json({ 
+      message: "Failed to fetch plans",
+      error: process.env.NODE_ENV === "development" ? errorMessage : undefined
+    });
   }
 });
 

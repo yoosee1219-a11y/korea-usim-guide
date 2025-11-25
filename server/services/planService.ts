@@ -111,8 +111,15 @@ export async function getPlans(filters: PlanFilters = {}): Promise<Plan[]> {
     ORDER BY p.is_popular DESC, p.price_krw ASC
   `;
 
-  const result = await db.query(query, params);
-  return result.rows;
+  try {
+    const result = await db.query(query, params);
+    return result.rows;
+  } catch (error) {
+    console.error("Database query error in getPlans:", error);
+    console.error("Query:", query);
+    console.error("Params:", params);
+    throw error;
+  }
 }
 
 // 특정 요금제 조회
