@@ -9,11 +9,10 @@ router.use(verifyToken);
 
 // POST /api/plans - 요금제 목록 조회 (필터링 지원)
 router.post("/", async (req, res) => {
-  try {
-    const body = req.body || {};
-    
-    const filters: PlanFilters = {};
+  const body = req.body || {};
+  const filters: PlanFilters = {};
 
+  try {
     if (body.carrier_id) filters.carrier_id = body.carrier_id;
     if (body.dataMin !== undefined) filters.dataMin = Number(body.dataMin);
     if (body.dataMax !== undefined) filters.dataMax = Number(body.dataMax);
@@ -36,6 +35,7 @@ router.post("/", async (req, res) => {
       message: errorMessage,
       stack: errorStack,
       filters,
+      body,
     });
     res.status(500).json({ 
       message: "Failed to fetch plans",
