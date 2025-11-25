@@ -9,6 +9,8 @@ import { usePlans, useComparePlans, type Plan, type PlanFilters } from "@/hooks/
 import { Spinner } from "@/components/ui/spinner";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { Breadcrumb } from "@/components/seo/Breadcrumb";
+import { CustomCheckbox } from "@/components/ui/CustomCheckbox";
+import { cn } from "@/lib/utils";
 
 // 통신사 데이터 (API에서 가져올 수도 있지만 일단 하드코딩)
 const carriers = [
@@ -55,10 +57,37 @@ export default function Compare() {
     }).format(price);
   };
 
-  // 데이터량 포맷팅
-  const formatData = (gb: number | null) => {
-    if (gb === null) return "제한 없음";
-    return `${gb}GB`;
+  // 데이터량 포맷팅 (개선: features에서 소진 후 속도 정보 추출)
+  const formatData = (plan: Plan) => {
+    const gb = plan.data_amount_gb;
+    const baseText = gb === null ? "제한 없음" : `${gb}GB`;
+    
+    // features에서 "데이터 소진 시" 또는 "소진시" 정보 찾기
+    if (plan.features && Array.isArray(plan.features)) {
+      const overageFeature = plan.features.find(
+        (f: string) => 
+          f.includes("소진") || 
+          f.includes("소진시") || 
+          f.includes("데이터 소진") ||
+          (f.includes("Mbps") && (f.includes("무제한") || f.includes("제한")))
+      );
+      
+      if (overageFeature) {
+        // "데이터 소진 시 3Mbps 무제한" 같은 텍스트 추출
+        let overageText = overageFeature
+          .replace(/데이터\s*소진\s*시?/i, "")
+          .replace(/소진\s*시?/i, "")
+          .replace(/.*?(\d+\s*Mbps.*?)/i, "$1")
+          .trim();
+        
+        // "3Mbps 무제한" 형식으로 정리
+        if (overageText && !overageText.includes("소진")) {
+          return `${baseText} + 소진시 ${overageText}`;
+        }
+      }
+    }
+    
+    return baseText;
   };
 
   const breadcrumbStructuredData = {
@@ -331,11 +360,12 @@ export default function Compare() {
             {plans.map((plan) => (
               <Card
                 key={plan.id}
-                className={`flex flex-col relative overflow-hidden border-2 transition-all duration-300 group ${
+                className={cn(
+                  "flex flex-col relative overflow-hidden border-2 transition-all duration-300 group",
                   selectedPlans.includes(plan.id)
-                    ? "border-primary ring-2 ring-primary"
-                    : "hover:border-primary/50"
-                }`}
+                    ? "border-primary ring-4 ring-primary/20 shadow-lg scale-[1.02]"
+                    : "hover:border-primary/50 hover:shadow-md"
+                )}
               >
                 {plan.is_popular && (
                   <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-lg z-10">
@@ -344,28 +374,39 @@ export default function Compare() {
                 )}
 
                 {/* 선택 체크박스 */}
-                <div className="absolute top-2 left-2 z-10">
-                  <input
-                    type="checkbox"
+                <div className="absolute top-3 left-3 z-10">
+                  <CustomCheckbox
                     checked={selectedPlans.includes(plan.id)}
                     onChange={() => togglePlanSelection(plan.id)}
-                    className="w-5 h-5 rounded border-primary text-primary focus:ring-primary"
                   />
                 </div>
 
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="font-normal">
-                        {plan.payment_type === "prepaid" ? "선불" : "후불"}
-                      </Badge>
-                      <Badge variant="outline" className="font-normal">
-                        {plan.plan_type === "prepaid"
-                          ? "선불"
-                          : plan.plan_type === "esim"
-                          ? "eSIM"
-                          : "선불/eSIM"}
-                      </Badge>
+                      {/* 결제 방식 배지 - 지원하는 것만 표시 */}
+                      {plan.payment_type === "prepaid" && (
+                        <Badge variant="outline" className="font-normal">
+                          선불
+                        </Badge>
+                      )}
+                      {plan.payment_type === "postpaid" && (
+                        <Badge variant="outline" className="font-normal">
+                          후불
+                        </Badge>
+                      )}
+                      
+                      {/* SIM 타입 배지 - 지원하는 것만 표시 */}
+                      {plan.physical_sim && (
+                        <Badge variant="outline" className="font-normal">
+                          USIM
+                        </Badge>
+                      )}
+                      {plan.esim_support && (
+                        <Badge variant="outline" className="font-normal">
+                          eSIM
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex items-center text-muted-foreground text-xs">
                       <Signal className="h-3 w-3 mr-1" /> {plan.carrier_name_ko}
@@ -381,7 +422,7 @@ export default function Compare() {
                   <div className="space-y-4">
                     <div className="p-4 bg-secondary/50 rounded-lg">
                       <div className="text-sm text-muted-foreground mb-1">데이터</div>
-                      <div className="font-semibold">{formatData(plan.data_amount_gb)}</div>
+                      <div className="font-semibold">{formatData(plan)}</div>
                     </div>
 
                     <div className="p-4 bg-secondary/50 rounded-lg">
@@ -409,20 +450,11 @@ export default function Compare() {
                       </ul>
                     )}
 
+                    {/* 기타 배지 (공항 수령만) */}
                     <div className="flex flex-wrap gap-2 mt-4">
                       {plan.airport_pickup && (
                         <Badge variant="secondary" className="text-xs">
                           공항 수령
-                        </Badge>
-                      )}
-                      {plan.esim_support && (
-                        <Badge variant="secondary" className="text-xs">
-                          eSIM
-                        </Badge>
-                      )}
-                      {plan.physical_sim && (
-                        <Badge variant="secondary" className="text-xs">
-                          물리 유심
                         </Badge>
                       )}
                     </div>
@@ -497,7 +529,7 @@ export default function Compare() {
                       <td className="p-4 font-semibold">데이터</td>
                       {comparePlans.map((plan) => (
                         <td key={plan.id} className="p-4">
-                          {formatData(plan.data_amount_gb)}
+                          {formatData(plan)}
                         </td>
                       ))}
                     </tr>
@@ -538,10 +570,20 @@ export default function Compare() {
                       ))}
                     </tr>
                     <tr className="border-b">
-                      <td className="p-4 font-semibold">eSIM 지원</td>
+                      <td className="p-4 font-semibold">SIM 타입</td>
                       {comparePlans.map((plan) => (
                         <td key={plan.id} className="p-4">
-                          {plan.esim_support ? "✓ 지원" : "✗ 미지원"}
+                          <div className="flex flex-wrap gap-2">
+                            {plan.physical_sim && (
+                              <Badge variant="secondary" className="text-xs">USIM</Badge>
+                            )}
+                            {plan.esim_support && (
+                              <Badge variant="secondary" className="text-xs">eSIM</Badge>
+                            )}
+                            {!plan.physical_sim && !plan.esim_support && (
+                              <span className="text-muted-foreground text-sm">-</span>
+                            )}
+                          </div>
                         </td>
                       ))}
                     </tr>
