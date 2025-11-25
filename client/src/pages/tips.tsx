@@ -9,6 +9,7 @@ import { useTips, useTipCategories, type Tip, type TipFilters } from "@/hooks/us
 import { Spinner } from "@/components/ui/spinner";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { Breadcrumb } from "@/components/seo/Breadcrumb";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { format } from "date-fns";
 
 export default function Tips() {
@@ -124,31 +125,17 @@ export default function Tips() {
             <div className="grid lg:grid-cols-2 gap-8 mb-12">
             <Link href={`/tips/${featuredTip.slug}`}>
               <div className="group relative rounded-2xl overflow-hidden aspect-video lg:aspect-[2/1] border cursor-pointer">
-                <img
-                  src={featuredTip.thumbnail_url || "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png"}
+                <OptimizedImage
+                  src={featuredTip.thumbnail_url}
                   alt={`${featuredTip.title} - 한국 통신 꿀팁 대표 이미지`}
-                  loading="eager"
-                  fetchPriority="high"
                   width={800}
                   height={400}
+                  loading="eager"
+                  fetchPriority="high"
+                  quality={85}
                   className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-                  onError={(e) => {
-                    // 이미지 로드 실패 시 기본 이미지로 대체
-                    const target = e.target as HTMLImageElement;
-                    if (target.src !== "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png") {
-                      target.src = "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png";
-                    } else {
-                      // 기본 이미지도 실패하면 배경색만 표시
-                      target.style.display = "none";
-                      const parent = target.parentElement;
-                      if (parent && !parent.querySelector(".fallback-placeholder")) {
-                        const placeholder = document.createElement("div");
-                        placeholder.className = "fallback-placeholder w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center";
-                        placeholder.innerHTML = `<span class="text-muted-foreground">이미지 없음</span>`;
-                        parent.appendChild(placeholder);
-                      }
-                    }
-                  }}
+                  sizes="(max-width: 1024px) 100vw, 800px"
+                  fallbackSrc="https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-6 flex flex-col justify-end text-white">
                   {featuredTip.category_name && (
@@ -186,23 +173,16 @@ export default function Tips() {
               <Link key={tip.id} href={`/tips/${tip.slug}`}>
                 <Card className="h-full hover:shadow-lg transition-all cursor-pointer group hover:-translate-y-1">
                   <div className="aspect-video relative overflow-hidden rounded-t-xl bg-secondary/50">
-                    <img
-                      src={tip.thumbnail_url || "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png"}
+                    <OptimizedImage
+                      src={tip.thumbnail_url}
                       alt={`${tip.title} - 한국 통신 꿀팁 이미지`}
-                      loading="lazy"
                       width={400}
                       height={225}
+                      loading="lazy"
+                      quality={80}
                       className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-                      onError={(e) => {
-                        // 이미지 로드 실패 시 기본 이미지로 대체
-                        const target = e.target as HTMLImageElement;
-                        if (target.src !== "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png") {
-                          target.src = "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png";
-                        } else {
-                          // 기본 이미지도 실패하면 숨김
-                          target.style.display = "none";
-                        }
-                      }}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 400px"
+                      fallbackSrc="https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png"
                     />
                   </div>
                   <CardHeader>

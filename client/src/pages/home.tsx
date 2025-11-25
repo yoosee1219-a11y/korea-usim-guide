@@ -6,6 +6,7 @@ import { Link } from "wouter";
 import { useTips } from "@/hooks/useTips";
 import { Spinner } from "@/components/ui/spinner";
 import { SEOHead } from "@/components/seo/SEOHead";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import heroImage from "@assets/generated_images/diverse_travelers_in_seoul_using_smartphones.png";
 
 export default function Home() {
@@ -44,7 +45,7 @@ export default function Home() {
                 2025 최신 요금제 업데이트 완료
               </div>
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-extrabold tracking-tight text-foreground leading-[1.1]">
-                Korea Travel <br />
+                Korea <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">
                   SIM & eSIM Guide
                 </span>
@@ -69,14 +70,16 @@ export default function Home() {
             </div>
             <div className="flex-1 relative w-full max-w-lg md:max-w-none">
               <div className="relative aspect-square md:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl ring-1 ring-border/50">
-                <img 
-                  src={heroImage} 
-                  alt="한국 여행객들이 서울에서 스마트폰으로 유심/eSIM 정보를 확인하는 모습" 
-                  loading="eager"
-                  fetchPriority="high"
+                <OptimizedImage
+                  src={heroImage}
+                  alt="한국 여행객들이 서울에서 스마트폰으로 유심/eSIM 정보를 확인하는 모습"
                   width={800}
                   height={600}
+                  loading="eager"
+                  fetchPriority="high"
+                  quality={90}
                   className="object-cover w-full h-full hover:scale-105 transition-transform duration-700"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 800px"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none"></div>
               </div>
@@ -162,23 +165,16 @@ export default function Home() {
                   <Link key={tip.id} href={`/tips/${tip.slug}`}>
                     <Card className="h-full hover:shadow-lg transition-all cursor-pointer group hover:-translate-y-1">
                       <div className="aspect-video relative overflow-hidden rounded-t-xl bg-secondary/50">
-                        <img 
-                          src={tip.thumbnail_url || heroImage} 
+                        <OptimizedImage
+                          src={tip.thumbnail_url}
                           alt={`${tip.title} - 한국 통신 꿀팁 이미지`}
-                          loading="lazy"
                           width={400}
                           height={225}
+                          loading="lazy"
+                          quality={80}
                           className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-                          onError={(e) => {
-                            // 이미지 로드 실패 시 기본 이미지로 대체
-                            const target = e.target as HTMLImageElement;
-                            if (target.src !== heroImage) {
-                              target.src = heroImage;
-                            } else {
-                              // 기본 이미지도 실패하면 숨김
-                              target.style.display = "none";
-                            }
-                          }}
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 400px"
+                          fallbackSrc={heroImage}
                         />
                       </div>
                       <CardContent className="pt-6">

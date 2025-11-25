@@ -157,9 +157,35 @@
   }
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    /* CLS 방지: 폰트 로드 전 레이아웃 시프트 방지 */
+    font-display: swap;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
+    font-display: swap;
+  }
+  
+  /* CLS 방지: 이미지 레이아웃 시프트 방지 */
+  img {
+    max-width: 100%;
+    height: auto;
+    /* 이미지가 로드되기 전 공간 확보 (width/height 속성이 있으면 자동으로 적용됨) */
+    display: block;
+  }
+  
+  /* CLS 방지: 로딩 중 플레이스홀더 */
+  img[loading="lazy"] {
+    background-color: hsl(var(--secondary));
+  }
+  
+  /* 폰트 로드 상태에 따른 스타일 */
+  html.fonts-loaded {
+    font-display: swap;
+  }
+  
+  /* LCP 최적화: 중요 이미지 우선 로딩 */
+  img[fetchpriority="high"] {
+    content-visibility: auto;
   }
 }
 

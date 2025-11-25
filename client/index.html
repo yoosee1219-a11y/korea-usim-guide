@@ -27,9 +27,18 @@
     <meta name="twitter:image" content="https://koreausimguide.com/og-image.png" />
 
     <link rel="icon" type="image/png" href="/favicon.png" />
+    
+    <!-- Font Preconnect (LCP 최적화) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- DNS Prefetch for External Resources (LCP 최적화) -->
+    <link rel="dns-prefetch" href="https://images.unsplash.com">
+    <link rel="dns-prefetch" href="https://koreausimguide.com">
+    
+    <!-- Performance Hints -->
+    <meta http-equiv="x-dns-prefetch-control" content="on">
   </head>
   <body>
     <div id="root"></div>
