@@ -15,8 +15,23 @@ const pool = new Pool({
   max: 10, // 최대 연결 수 (Serverless에 적합)
   // min은 Serverless에서 제거 (요청마다 새 인스턴스 생성 가능)
   idleTimeoutMillis: 30000, // 30초 동안 사용되지 않은 연결은 종료
-  connectionTimeoutMillis: 10000, // 10초 내 연결 실패 시 타임아웃 (여유 있게)
-  // allowExitOnIdle은 Serverless에서 제거 (문제 발생 가능)
+  connectionTimeoutMillis: 30000, // 30초로 증가 (10초 → 30초)
+  // 연결 유지 설정
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000,
+});
+
+// 연결 풀 이벤트 핸들러 (에러 추적)
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+});
+
+pool.on('connect', () => {
+  console.log('Database connection established');
+});
+
+pool.on('remove', () => {
+  console.log('Database connection removed from pool');
 });
 
 // 연결 테스트 함수

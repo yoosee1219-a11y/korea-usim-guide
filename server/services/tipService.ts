@@ -1,5 +1,40 @@
 import { db } from "../storage/db.js";
 
+// 쿼리 재시도 헬퍼 함수
+async function queryWithRetry<T>(
+  queryFn: () => Promise<T>,
+  maxRetries: number = 3,
+  delay: number = 1000
+): Promise<T> {
+  let lastError: Error | null = null;
+  
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await queryFn();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      // 연결 타임아웃 에러인 경우에만 재시도
+      if (
+        lastError.message.includes('timeout') ||
+        lastError.message.includes('Connection terminated') ||
+        lastError.message.includes('ECONNRESET')
+      ) {
+        if (i < maxRetries - 1) {
+          console.log(`Query failed, retrying... (${i + 1}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+          continue;
+        }
+      }
+      
+      // 재시도 불가능한 에러는 즉시 throw
+      throw error;
+    }
+  }
+  
+  throw lastError || new Error('Query failed after retries');
+}
+
 export interface Tip {
   id: string;
   category_id: string;
@@ -45,8 +80,16 @@ export async function getTipCategories(): Promise<TipCategory[]> {
     ORDER BY id
   `;
 
-  const result = await db.query(query);
-  return result.rows;
+  try {
+    return await queryWithRetry(async () => {
+      const result = await db.query(query);
+      return result.rows;
+    });
+  } catch (error) {
+    console.error("Database query error in getTipCategories:", error);
+    console.error("Query:", query);
+    throw error;
+  }
 }
 
 // 꿀팁 목록 조회 (페이지네이션 지원)
@@ -77,9 +120,6 @@ export async function getTips(filters: TipFilters = {}): Promise<{ tips: Tip[]; 
     ${whereClause}
   `;
 
-  const countResult = await db.query(countQuery, params);
-  const total = parseInt(countResult.rows[0].total, 10);
-
   // 목록 조회
   const query = `
     SELECT 
@@ -93,14 +133,28 @@ export async function getTips(filters: TipFilters = {}): Promise<{ tips: Tip[]; 
   `;
 
   params.push(limit, offset);
-  const result = await db.query(query, params);
 
-  return {
-    tips: result.rows,
-    total,
-    page,
-    limit,
-  };
+  try {
+    return await queryWithRetry(async () => {
+      const countResult = await db.query(countQuery, params.slice(0, params.length - 2));
+      const total = parseInt(countResult.rows[0].total, 10);
+
+      const result = await db.query(query, params);
+
+      return {
+        tips: result.rows,
+        total,
+        page,
+        limit,
+      };
+    });
+  } catch (error) {
+    console.error("Database query error in getTips:", error);
+    console.error("Count Query:", countQuery);
+    console.error("Query:", query);
+    console.error("Params:", params);
+    throw error;
+  }
 }
 
 // 특정 꿀팁 조회 (ID로)
@@ -115,8 +169,16 @@ export async function getTipById(tipId: string): Promise<Tip | null> {
     LIMIT 1
   `;
 
-  const result = await db.query(query, [tipId]);
-  return result.rows[0] || null;
+  try {
+    return await queryWithRetry(async () => {
+      const result = await db.query(query, [tipId]);
+      return result.rows[0] || null;
+    });
+  } catch (error) {
+    console.error("Database query error in getTipById:", error);
+    console.error("Query:", query);
+    throw error;
+  }
 }
 
 // 특정 꿀팁 조회 (슬러그로)
@@ -131,8 +193,16 @@ export async function getTipBySlug(slug: string): Promise<Tip | null> {
     LIMIT 1
   `;
 
-  const result = await db.query(query, [slug]);
-  return result.rows[0] || null;
+  try {
+    return await queryWithRetry(async () => {
+      const result = await db.query(query, [slug]);
+      return result.rows[0] || null;
+    });
+  } catch (error) {
+    console.error("Database query error in getTipBySlug:", error);
+    console.error("Query:", query);
+    throw error;
+  }
 }
 
 // 조회수 증가

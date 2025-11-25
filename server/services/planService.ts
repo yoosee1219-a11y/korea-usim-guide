@@ -1,5 +1,40 @@
 import { db } from "../storage/db.js";
 
+// 쿼리 재시도 헬퍼 함수
+async function queryWithRetry<T>(
+  queryFn: () => Promise<T>,
+  maxRetries: number = 3,
+  delay: number = 1000
+): Promise<T> {
+  let lastError: Error | null = null;
+  
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await queryFn();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      // 연결 타임아웃 에러인 경우에만 재시도
+      if (
+        lastError.message.includes('timeout') ||
+        lastError.message.includes('Connection terminated') ||
+        lastError.message.includes('ECONNRESET')
+      ) {
+        if (i < maxRetries - 1) {
+          console.log(`Query failed, retrying... (${i + 1}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+          continue;
+        }
+      }
+      
+      // 재시도 불가능한 에러는 즉시 throw
+      throw error;
+    }
+  }
+  
+  throw lastError || new Error('Query failed after retries');
+}
+
 export interface Plan {
   id: string;
   carrier_id: string;
@@ -112,8 +147,10 @@ export async function getPlans(filters: PlanFilters = {}): Promise<Plan[]> {
   `;
 
   try {
-    const result = await db.query(query, params);
-    return result.rows;
+    return await queryWithRetry(async () => {
+      const result = await db.query(query, params);
+      return result.rows;
+    });
   } catch (error) {
     console.error("Database query error in getPlans:", error);
     console.error("Query:", query);
@@ -135,8 +172,16 @@ export async function getPlanById(planId: string): Promise<Plan | null> {
     LIMIT 1
   `;
 
-  const result = await db.query(query, [planId]);
-  return result.rows[0] || null;
+  try {
+    return await queryWithRetry(async () => {
+      const result = await db.query(query, [planId]);
+      return result.rows[0] || null;
+    });
+  } catch (error) {
+    console.error("Database query error in getPlanById:", error);
+    console.error("Query:", query);
+    throw error;
+  }
 }
 
 // 요금제 비교 (여러 ID)
@@ -157,7 +202,15 @@ export async function comparePlans(planIds: string[]): Promise<Plan[]> {
     ORDER BY p.price_krw ASC
   `;
 
-  const result = await db.query(query, [planIds]);
-  return result.rows;
+  try {
+    return await queryWithRetry(async () => {
+      const result = await db.query(query, [planIds]);
+      return result.rows;
+    });
+  } catch (error) {
+    console.error("Database query error in comparePlans:", error);
+    console.error("Query:", query);
+    throw error;
+  }
 }
 

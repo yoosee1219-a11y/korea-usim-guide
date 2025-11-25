@@ -21,17 +21,25 @@ router.post("/categories", async (req, res) => {
     res.json({ categories });
   } catch (error) {
     console.error("Error fetching tip categories:", error);
-    res.status(500).json({ message: "Failed to fetch tip categories" });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error("Error details:", {
+      message: errorMessage,
+      stack: errorStack,
+    });
+    res.status(500).json({ 
+      message: "Failed to fetch tip categories",
+      error: process.env.NODE_ENV === "development" ? errorMessage : undefined
+    });
   }
 });
 
 // POST /api/tips - 꿀팁 목록 조회 (페이지네이션 지원)
 router.post("/", async (req, res) => {
+  const body = req.body || {};
+  const filters: TipFilters = {};
+  
   try {
-    const body = req.body || {};
-    
-    const filters: TipFilters = {};
-
     if (body.category_id) filters.category_id = body.category_id;
     if (body.page !== undefined) filters.page = Number(body.page);
     if (body.limit !== undefined) filters.limit = Number(body.limit);
@@ -41,7 +49,18 @@ router.post("/", async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error("Error fetching tips:", error);
-    res.status(500).json({ message: "Failed to fetch tips" });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error("Error details:", {
+      message: errorMessage,
+      stack: errorStack,
+      filters,
+      body,
+    });
+    res.status(500).json({ 
+      message: "Failed to fetch tips",
+      error: process.env.NODE_ENV === "development" ? errorMessage : undefined
+    });
   }
 });
 
