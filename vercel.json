@@ -4,6 +4,129 @@
   "outputDirectory": "dist/public",
   "installCommand": "npm install",
   "framework": null,
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.koreausimguide.com"
+        }
+      ],
+      "destination": "https://koreausimguide.com/$1",
+      "permanent": true
+    },
+    {
+      "source": "/en/(.*)",
+      "destination": "/$1",
+      "permanent": true
+    },
+    {
+      "source": "/ru/(.*)",
+      "destination": "/$1",
+      "permanent": true
+    },
+    {
+      "source": "/zh/(.*)",
+      "destination": "/$1",
+      "permanent": true
+    },
+    {
+      "source": "/th/(.*)",
+      "destination": "/$1",
+      "permanent": true
+    },
+    {
+      "source": "/vi/(.*)",
+      "destination": "/$1",
+      "permanent": true
+    },
+    {
+      "source": "/uz/(.*)",
+      "destination": "/$1",
+      "permanent": true
+    },
+    {
+      "source": "/mn/(.*)",
+      "destination": "/$1",
+      "permanent": true
+    },
+    {
+      "source": "/ne/(.*)",
+      "destination": "/$1",
+      "permanent": true
+    },
+    {
+      "source": "/tl/(.*)",
+      "destination": "/$1",
+      "permanent": true
+    },
+    {
+      "source": "/id/(.*)",
+      "destination": "/$1",
+      "permanent": true
+    },
+    {
+      "source": "/ko/(.*)",
+      "destination": "/$1",
+      "permanent": true
+    },
+    {
+      "source": "/en",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/ru",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/zh",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/th",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/vi",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/uz",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/mn",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/ne",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/tl",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/id",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/ko",
+      "destination": "/",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/(.*)",
