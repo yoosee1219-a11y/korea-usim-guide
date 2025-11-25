@@ -154,31 +154,35 @@ export default function Compare() {
               <Filter className="h-4 w-4" />
               필터 {showFilters ? "숨기기" : "보기"}
             </Button>
+          </div>
 
-            {selectedPlans.length > 0 && (
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-3 py-1.5 rounded-full">
+          {/* 비교하기 버튼 - 스크롤 따라오는 sticky 버튼 */}
+          {selectedPlans.length > 0 && (
+            <div className="sticky top-4 z-40 mb-6">
+              <div className="flex items-center justify-center gap-3 bg-background/95 backdrop-blur-md border-2 border-primary/20 rounded-xl p-4 shadow-xl max-w-fit mx-auto">
+                <span className="text-sm font-semibold text-foreground bg-primary/10 px-4 py-2 rounded-full border border-primary/30">
                   {selectedPlans.length}개 선택됨
                 </span>
                 <Button
                   variant="default"
                   onClick={() => setShowComparison(true)}
-                  className="gap-2 shadow-md hover:shadow-lg transition-all"
+                  className="gap-2 shadow-lg hover:shadow-xl transition-all text-base font-semibold px-6 py-2 h-auto"
+                  size="lg"
                 >
-                  <CompareIcon className="h-4 w-4" />
+                  <CompareIcon className="h-5 w-5" />
                   비교하기
                 </Button>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   onClick={() => setSelectedPlans([])}
-                  className="hover:bg-destructive/10 hover:text-destructive"
+                  className="hover:bg-destructive/10 hover:text-destructive rounded-full"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5" />
                 </Button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {showFilters && (
             <Card className="p-6 mb-4 shadow-lg border-2 bg-gradient-to-br from-background to-secondary/20">
@@ -380,18 +384,16 @@ export default function Compare() {
                   </div>
                 )}
 
-                {/* 선택 체크박스 - 더 자연스러운 위치 */}
-                <div className="absolute top-4 left-4 z-20">
-                  <CustomCheckbox
-                    checked={selectedPlans.includes(plan.id)}
-                    onChange={() => togglePlanSelection(plan.id)}
-                    className="backdrop-blur-sm"
-                  />
-                </div>
-
                 <CardHeader className="pb-4 pt-6">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      {/* 선택 체크박스 - 배지들과 나란히 배치 */}
+                      <CustomCheckbox
+                        checked={selectedPlans.includes(plan.id)}
+                        onChange={() => togglePlanSelection(plan.id)}
+                        className="backdrop-blur-sm shrink-0"
+                      />
+                      
                       {/* 결제 방식 배지 - 지원하는 것만 표시 */}
                       {plan.payment_type === "prepaid" && (
                         <Badge variant="outline" className="font-medium text-xs px-2.5 py-0.5 border-primary/30 bg-primary/5 text-primary">
