@@ -83,6 +83,61 @@ export function generateHowToSchema(content: string, title: string, description?
 }
 
 /**
+ * 마크다운 콘텐츠에서 FAQ 자동 추출
+ * Q: 또는 Q. 패턴으로 질문, A: 또는 A. 패턴으로 답변 추출
+ */
+export function extractFAQsFromContent(content: string): Array<{ question: string; answer: string }> {
+  const faqs: Array<{ question: string; answer: string }> = [];
+  const lines = content.split('\n');
+  
+  let currentQuestion: string | null = null;
+  let currentAnswer: string[] = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // 질문 패턴 감지 (Q:, Q., Q： 등)
+    if (line.match(/^Q[：:\.]\s*(.+)/i)) {
+      // 이전 FAQ 저장
+      if (currentQuestion && currentAnswer.length > 0) {
+        faqs.push({
+          question: currentQuestion,
+          answer: currentAnswer.join(' ').trim()
+        });
+      }
+      
+      // 새 질문 시작
+      currentQuestion = line.replace(/^Q[：:\.]\s*/i, '').trim();
+      currentAnswer = [];
+    }
+    // 답변 패턴 감지 (A:, A., A： 등)
+    else if (line.match(/^A[：:\.]\s*(.+)/i)) {
+      const answerText = line.replace(/^A[：:\.]\s*/i, '').trim();
+      if (answerText) {
+        currentAnswer.push(answerText);
+      }
+    }
+    // 답변 계속 (빈 줄이 아니고 질문/답변 패턴이 아닌 경우)
+    else if (currentQuestion && line && !line.match(/^Q[：:\.]/i) && !line.match(/^A[：:\.]/i)) {
+      // 헤딩이 아닌 경우만 답변에 추가
+      if (!line.startsWith('#')) {
+        currentAnswer.push(line);
+      }
+    }
+  }
+  
+  // 마지막 FAQ 저장
+  if (currentQuestion && currentAnswer.length > 0) {
+    faqs.push({
+      question: currentQuestion,
+      answer: currentAnswer.join(' ').trim()
+    });
+  }
+  
+  return faqs;
+}
+
+/**
  * FAQ 스키마 생성
  */
 export function generateFAQSchema(faqs: Array<{ question: string; answer: string }>) {
@@ -165,5 +220,41 @@ export function generateProductWithReviewSchema(
   }
   
   return productSchema;
+}
+
+/**
+ * 마크다운 콘텐츠에서 목차(TOC) 자동 생성
+ * 헤딩(##, ###)을 추출하여 목차 생성
+ */
+export interface TOCItem {
+  id: string;
+  level: number;
+  text: string;
+}
+
+export function generateTOC(content: string): TOCItem[] {
+  const toc: TOCItem[] = [];
+  const lines = content.split('\n');
+  
+  for (const line of lines) {
+    // 헤딩 감지 (##, ###, #### 등)
+    const match = line.match(/^(#{2,4})\s+(.+)$/);
+    if (match) {
+      const level = match[1].length; // ## = 2, ### = 3, #### = 4
+      const text = match[2].trim();
+      
+      // ID 생성 (한글, 영문, 숫자, 하이픈만 허용)
+      const id = text
+        .toLowerCase()
+        .replace(/[^\w\s-가-힣]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+      
+      toc.push({ id, level, text });
+    }
+  }
+  
+  return toc;
 }
 

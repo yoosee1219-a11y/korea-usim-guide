@@ -8,8 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { Breadcrumb } from "@/components/seo/Breadcrumb";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
-import { generateHowToSchema } from "@/lib/schemaUtils";
-import ReactMarkdown from "react-markdown";
+import { 
+  generateHowToSchema, 
+  extractFAQsFromContent, 
+  generateFAQSchema,
+  generateTOC 
+} from "@/lib/schemaUtils";
+import { MarkdownRenderer } from "@/components/content/MarkdownRenderer";
+import { TableOfContents } from "@/components/content/TableOfContents";
 import { format } from "date-fns";
 
 export default function TipDetail() {
@@ -121,11 +127,19 @@ export default function TipDetail() {
   // HowTo 스키마 생성 (마크다운 콘텐츠에서 단계 추출)
   const howToSchema = tip ? generateHowToSchema(tip.content, tip.title, tip.excerpt || undefined) : null;
 
+  // FAQ 자동 추출 및 스키마 생성
+  const faqs = tip ? extractFAQsFromContent(tip.content) : [];
+  const faqSchema = faqs.length > 0 ? generateFAQSchema(faqs) : null;
+
+  // 목차(TOC) 생성
+  const toc = tip ? generateTOC(tip.content) : [];
+
   // 여러 구조화된 데이터를 배열로 결합
   const structuredDataArray = [];
   if (tip && breadcrumbStructuredData) structuredDataArray.push(breadcrumbStructuredData);
   if (articleStructuredData) structuredDataArray.push(articleStructuredData);
   if (howToSchema) structuredDataArray.push(howToSchema);
+  if (faqSchema) structuredDataArray.push(faqSchema);
   
   const combinedStructuredData = structuredDataArray.length > 0 ? structuredDataArray : null;
 
@@ -216,9 +230,12 @@ export default function TipDetail() {
               </p>
             )}
 
+            {/* 목차 (TOC) */}
+            {toc.length > 0 && <TableOfContents items={toc} />}
+
             {/* 본문 (마크다운 렌더링) */}
-            <div className="prose prose-lg dark:prose-invert max-w-none mb-12">
-              <ReactMarkdown>{tip.content}</ReactMarkdown>
+            <div className="mb-12">
+              <MarkdownRenderer content={tip.content} />
             </div>
 
             {/* 공유 및 하단 */}
