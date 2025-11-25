@@ -127,12 +127,14 @@ export default function Compare() {
         canonical="https://koreausimguide.com/compare"
         structuredData={structuredData}
       />
-      <div className="bg-secondary/30 py-12 border-b">
+      <div className="bg-gradient-to-br from-primary/5 via-background to-primary/5 py-16 border-b">
         <div className="container mx-auto px-4">
           <Breadcrumb items={[{ label: "요금제 비교" }]} />
           <div className="text-center">
-            <h1 className="text-4xl font-heading font-bold mb-4">요금제 비교</h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              요금제 비교
+            </h1>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
               한국의 주요 통신사 요금제를 한눈에 비교하세요. 여행 기간과 데이터 사용량에 맞는 최적의 플랜을 찾아드립니다.
             </p>
           </div>
@@ -142,26 +144,26 @@ export default function Compare() {
       <div className="container mx-auto px-4 py-8">
         <h2 className="sr-only">필터 및 검색</h2>
         {/* 필터 UI */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
             <Button
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
-              className="gap-2"
+              className="gap-2 shadow-sm hover:shadow-md transition-shadow"
             >
               <Filter className="h-4 w-4" />
               필터 {showFilters ? "숨기기" : "보기"}
             </Button>
 
             {selectedPlans.length > 0 && (
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-muted-foreground">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-3 py-1.5 rounded-full">
                   {selectedPlans.length}개 선택됨
                 </span>
                 <Button
                   variant="default"
                   onClick={() => setShowComparison(true)}
-                  className="gap-2"
+                  className="gap-2 shadow-md hover:shadow-lg transition-all"
                 >
                   <CompareIcon className="h-4 w-4" />
                   비교하기
@@ -170,6 +172,7 @@ export default function Compare() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setSelectedPlans([])}
+                  className="hover:bg-destructive/10 hover:text-destructive"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -178,7 +181,7 @@ export default function Compare() {
           </div>
 
           {showFilters && (
-            <Card className="p-6 mb-4">
+            <Card className="p-6 mb-4 shadow-lg border-2 bg-gradient-to-br from-background to-secondary/20">
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* 통신사 필터 */}
                 <div>
@@ -355,96 +358,101 @@ export default function Compare() {
         {/* 요금제 목록 */}
         {!isLoading && !error && plans && plans.length > 0 && (
           <>
-            <h2 className="text-2xl font-heading font-bold mb-6">추천 요금제</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <h2 className="text-2xl md:text-3xl font-heading font-bold mb-8 text-center md:text-left">
+              추천 요금제
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {plans.map((plan) => (
               <Card
                 key={plan.id}
                 className={cn(
                   "flex flex-col relative overflow-hidden border-2 transition-all duration-300 group",
+                  "bg-gradient-to-br from-background via-background to-secondary/10",
+                  "hover:shadow-xl hover:-translate-y-1",
                   selectedPlans.includes(plan.id)
-                    ? "border-primary ring-4 ring-primary/20 shadow-lg scale-[1.02]"
-                    : "hover:border-primary/50 hover:shadow-md"
+                    ? "border-primary ring-4 ring-primary/30 shadow-2xl shadow-primary/20 scale-[1.02] bg-gradient-to-br from-primary/5 via-background to-primary/5"
+                    : "border-border/50 hover:border-primary/60 hover:shadow-lg"
                 )}
               >
                 {plan.is_popular && (
-                  <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-lg z-10">
-                    인기
+                  <div className="absolute top-0 right-0 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-bl-xl z-10 shadow-lg">
+                    ⭐ 인기
                   </div>
                 )}
 
-                {/* 선택 체크박스 */}
-                <div className="absolute top-3 left-3 z-10">
+                {/* 선택 체크박스 - 더 자연스러운 위치 */}
+                <div className="absolute top-4 left-4 z-20">
                   <CustomCheckbox
                     checked={selectedPlans.includes(plan.id)}
                     onChange={() => togglePlanSelection(plan.id)}
+                    className="backdrop-blur-sm"
                   />
                 </div>
 
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
+                <CardHeader className="pb-4 pt-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {/* 결제 방식 배지 - 지원하는 것만 표시 */}
                       {plan.payment_type === "prepaid" && (
-                        <Badge variant="outline" className="font-normal">
+                        <Badge variant="outline" className="font-medium text-xs px-2.5 py-0.5 border-primary/30 bg-primary/5 text-primary">
                           선불
                         </Badge>
                       )}
                       {plan.payment_type === "postpaid" && (
-                        <Badge variant="outline" className="font-normal">
+                        <Badge variant="outline" className="font-medium text-xs px-2.5 py-0.5 border-primary/30 bg-primary/5 text-primary">
                           후불
                         </Badge>
                       )}
                       
                       {/* SIM 타입 배지 - 지원하는 것만 표시 */}
                       {plan.physical_sim && (
-                        <Badge variant="outline" className="font-normal">
+                        <Badge variant="outline" className="font-medium text-xs px-2.5 py-0.5 border-blue-300 bg-blue-50 text-blue-700">
                           USIM
                         </Badge>
                       )}
                       {plan.esim_support && (
-                        <Badge variant="outline" className="font-normal">
+                        <Badge variant="outline" className="font-medium text-xs px-2.5 py-0.5 border-purple-300 bg-purple-50 text-purple-700">
                           eSIM
                         </Badge>
                       )}
                     </div>
-                    <div className="flex items-center text-muted-foreground text-xs">
-                      <Signal className="h-3 w-3 mr-1" /> {plan.carrier_name_ko}
+                    <div className="flex items-center text-muted-foreground text-xs font-medium">
+                      <Signal className="h-3.5 w-3.5 mr-1.5 text-primary" /> {plan.carrier_name_ko}
                     </div>
                   </div>
-                  <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
-                  <CardDescription className="font-medium text-foreground mt-2 text-lg">
+                  <CardTitle className="text-xl md:text-2xl font-bold mb-2 leading-tight">{plan.name}</CardTitle>
+                  <CardDescription className="font-bold text-foreground mt-2 text-2xl text-primary">
                     {formatPrice(plan.price_krw)}
                   </CardDescription>
                 </CardHeader>
 
                 <CardContent className="flex-1">
-                  <div className="space-y-4">
-                    <div className="p-4 bg-secondary/50 rounded-lg">
-                      <div className="text-sm text-muted-foreground mb-1">데이터</div>
-                      <div className="font-semibold">{formatData(plan)}</div>
+                  <div className="space-y-3">
+                    <div className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border border-primary/20 shadow-sm">
+                      <div className="text-xs text-muted-foreground mb-1.5 font-medium">데이터</div>
+                      <div className="font-bold text-lg text-foreground">{formatData(plan)}</div>
                     </div>
 
-                    <div className="p-4 bg-secondary/50 rounded-lg">
-                      <div className="text-sm text-muted-foreground mb-1">유효기간</div>
-                      <div className="font-semibold">{plan.validity_days}일</div>
+                    <div className="p-4 bg-gradient-to-br from-secondary/60 to-secondary/30 rounded-xl border border-border/50 shadow-sm">
+                      <div className="text-xs text-muted-foreground mb-1.5 font-medium">유효기간</div>
+                      <div className="font-bold text-lg text-foreground">{plan.validity_days}일</div>
                     </div>
 
                     {plan.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
+                      <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                         {plan.description}
                       </p>
                     )}
 
                     {plan.features && plan.features.length > 0 && (
-                      <ul className="space-y-2 mt-4">
+                      <ul className="space-y-2.5 mt-4">
                         {plan.features.slice(0, 3).map((feature, i) => (
                           <li
                             key={i}
-                            className="flex items-start gap-2 text-sm text-muted-foreground"
+                            className="flex items-start gap-2.5 text-sm text-foreground/80"
                           >
-                            <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                            {feature}
+                            <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0 stroke-[3]" />
+                            <span className="leading-relaxed">{feature}</span>
                           </li>
                         ))}
                       </ul>
@@ -453,25 +461,30 @@ export default function Compare() {
                     {/* 기타 배지 (공항 수령만) */}
                     <div className="flex flex-wrap gap-2 mt-4">
                       {plan.airport_pickup && (
-                        <Badge variant="secondary" className="text-xs">
-                          공항 수령
+                        <Badge variant="secondary" className="text-xs px-3 py-1 bg-green-50 text-green-700 border-green-200">
+                          ✈️ 공항 수령
                         </Badge>
                       )}
                     </div>
                   </div>
                 </CardContent>
 
-                <CardFooter className="pt-4 flex gap-2">
+                <CardFooter className="pt-6 flex gap-3">
                   <Link href={`/plans/${plan.id}`} className="flex-1">
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full shadow-sm hover:shadow-md transition-all hover:bg-secondary">
                       상세보기
                     </Button>
                   </Link>
                   <Button
-                    className="flex-1 text-base font-medium group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                    className={cn(
+                      "flex-1 text-base font-semibold transition-all shadow-md hover:shadow-lg",
+                      selectedPlans.includes(plan.id)
+                        ? "bg-gradient-to-r from-primary/90 to-primary hover:from-primary hover:to-primary/90"
+                        : "bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary"
+                    )}
                     onClick={() => togglePlanSelection(plan.id)}
                   >
-                    {selectedPlans.includes(plan.id) ? "선택 해제" : "비교에 추가"}
+                    {selectedPlans.includes(plan.id) ? "✓ 선택됨" : "비교에 추가"}
                   </Button>
                 </CardFooter>
               </Card>
@@ -490,26 +503,28 @@ export default function Compare() {
 
       {/* 비교 모달 */}
       {showComparison && comparePlans && comparePlans.length > 0 && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-6xl max-h-[90vh] overflow-y-auto">
-            <CardHeader>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <Card className="w-full max-w-6xl max-h-[90vh] overflow-y-auto shadow-2xl border-2 bg-gradient-to-br from-background to-secondary/10 animate-in zoom-in-95 duration-300">
+            <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 border-b">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-2xl">요금제 비교</CardTitle>
-                <Button variant="ghost" size="icon" onClick={closeComparison}>
+                <CardTitle className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  요금제 비교
+                </CardTitle>
+                <Button variant="ghost" size="icon" onClick={closeComparison} className="hover:bg-destructive/10 hover:text-destructive rounded-full">
                   <X className="h-5 w-5" />
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-4 font-bold">항목</th>
+                    <tr className="border-b-2 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
+                      <th className="text-left p-4 font-bold text-foreground">항목</th>
                       {comparePlans.map((plan) => (
                         <th key={plan.id} className="text-left p-4 font-bold">
-                          {plan.name}
-                          <div className="text-sm font-normal text-muted-foreground">
+                          <div className="text-base md:text-lg">{plan.name}</div>
+                          <div className="text-sm font-normal text-muted-foreground mt-1">
                             {plan.carrier_name_ko}
                           </div>
                         </th>
@@ -517,68 +532,62 @@ export default function Compare() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b">
-                      <td className="p-4 font-semibold">가격</td>
+                    <tr className="border-b hover:bg-secondary/30 transition-colors">
+                      <td className="p-4 font-semibold text-foreground">가격</td>
                       {comparePlans.map((plan) => (
-                        <td key={plan.id} className="p-4">
+                        <td key={plan.id} className="p-4 text-primary font-semibold">
                           {formatPrice(plan.price_krw)}
                         </td>
                       ))}
                     </tr>
-                    <tr className="border-b">
-                      <td className="p-4 font-semibold">데이터</td>
+                    <tr className="border-b hover:bg-secondary/30 transition-colors">
+                      <td className="p-4 font-semibold text-foreground">데이터</td>
                       {comparePlans.map((plan) => (
-                        <td key={plan.id} className="p-4">
+                        <td key={plan.id} className="p-4 font-medium">
                           {formatData(plan)}
                         </td>
                       ))}
                     </tr>
-                    <tr className="border-b">
-                      <td className="p-4 font-semibold">유효기간</td>
+                    <tr className="border-b hover:bg-secondary/30 transition-colors">
+                      <td className="p-4 font-semibold text-foreground">유효기간</td>
                       {comparePlans.map((plan) => (
-                        <td key={plan.id} className="p-4">
+                        <td key={plan.id} className="p-4 font-medium">
                           {plan.validity_days}일
                         </td>
                       ))}
                     </tr>
-                    <tr className="border-b">
-                      <td className="p-4 font-semibold">결제 방식</td>
+                    <tr className="border-b hover:bg-secondary/30 transition-colors">
+                      <td className="p-4 font-semibold text-foreground">결제 방식</td>
                       {comparePlans.map((plan) => (
                         <td key={plan.id} className="p-4">
-                          {plan.payment_type === "prepaid" ? "선불" : "후불"}
+                          <Badge variant="outline" className="text-xs px-2.5 py-0.5 border-primary/30 bg-primary/5 text-primary">
+                            {plan.payment_type === "prepaid" ? "선불" : "후불"}
+                          </Badge>
                         </td>
                       ))}
                     </tr>
-                    <tr className="border-b">
-                      <td className="p-4 font-semibold">요금제 유형</td>
+                    <tr className="border-b hover:bg-secondary/30 transition-colors">
+                      <td className="p-4 font-semibold text-foreground">공항 수령</td>
                       {comparePlans.map((plan) => (
                         <td key={plan.id} className="p-4">
-                          {plan.plan_type === "prepaid"
-                            ? "선불"
-                            : plan.plan_type === "esim"
-                            ? "eSIM"
-                            : "선불/eSIM"}
+                          {plan.airport_pickup ? (
+                            <span className="text-green-600 font-semibold">✓ 가능</span>
+                          ) : (
+                            <span className="text-muted-foreground">✗ 불가능</span>
+                          )}
                         </td>
                       ))}
                     </tr>
-                    <tr className="border-b">
-                      <td className="p-4 font-semibold">공항 수령</td>
-                      {comparePlans.map((plan) => (
-                        <td key={plan.id} className="p-4">
-                          {plan.airport_pickup ? "✓ 가능" : "✗ 불가능"}
-                        </td>
-                      ))}
-                    </tr>
-                    <tr className="border-b">
-                      <td className="p-4 font-semibold">SIM 타입</td>
+                    <tr className="border-b hover:bg-secondary/30 transition-colors">
+                      <td className="p-4 font-semibold text-foreground">SIM 타입</td>
                       {comparePlans.map((plan) => (
                         <td key={plan.id} className="p-4">
                           <div className="flex flex-wrap gap-2">
                             {plan.physical_sim && (
-                              <Badge variant="secondary" className="text-xs">USIM</Badge>
+                              <Badge variant="secondary" className="text-xs px-2.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200">USIM</Badge>
                             )}
                             {plan.esim_support && (
-                              <Badge variant="secondary" className="text-xs">eSIM</Badge>
+                              <Badge variant="secondary" className="text-xs px-2.5 py-0.5 bg-purple-50 text-purple-700 border-purple-200">eSIM</Badge>
                             )}
                             {!plan.physical_sim && !plan.esim_support && (
                               <span className="text-muted-foreground text-sm">-</span>
