@@ -6,6 +6,7 @@ import { useTipBySlug, useTips } from "@/hooks/useTips";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import { SEOHead } from "@/components/seo/SEOHead";
+import { Breadcrumb } from "@/components/seo/Breadcrumb";
 import ReactMarkdown from "react-markdown";
 import { format } from "date-fns";
 
@@ -135,31 +136,51 @@ export default function TipDetail() {
       )}
       <article className="min-h-screen pb-20">
         {/* Hero Image */}
-        {tip.thumbnail_url && (
-          <div className="w-full h-[40vh] md:h-[50vh] relative">
-            <img
-              src={tip.thumbnail_url}
-              alt={tip.title}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent"></div>
+        <div className="w-full h-[40vh] md:h-[50vh] relative bg-secondary/50">
+          <img
+            src={tip.thumbnail_url || "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png"}
+            alt={`${tip.title} - 한국 통신 꿀팁 대표 이미지`}
+            loading="eager"
+            fetchPriority="high"
+            width={1200}
+            height={630}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              // 이미지 로드 실패 시 기본 이미지로 대체
+              const target = e.target as HTMLImageElement;
+              if (target.src !== "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png") {
+                target.src = "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png";
+              } else {
+                // 기본 이미지도 실패하면 숨김
+                target.style.display = "none";
+              }
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent"></div>
 
-            <div className="absolute top-6 left-4 md:left-8">
-              <Link href="/tips">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="gap-2 shadow-lg backdrop-blur-md bg-background/50 hover:bg-background/80"
-                >
-                  <ArrowLeft className="h-4 w-4" /> 목록으로
-                </Button>
-              </Link>
-            </div>
+          <div className="absolute top-6 left-4 md:left-8">
+            <Link href="/tips">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="gap-2 shadow-lg backdrop-blur-md bg-background/50 hover:bg-background/80"
+              >
+                <ArrowLeft className="h-4 w-4" /> 목록으로
+              </Button>
+            </Link>
           </div>
-        )}
+        </div>
 
         <div className={`container mx-auto px-4 ${tip.thumbnail_url ? "-mt-20" : "pt-12"} relative z-10`}>
           <div className="max-w-3xl mx-auto bg-background rounded-3xl shadow-xl border p-6 md:p-12">
+            {!tip.thumbnail_url && (
+              <Breadcrumb
+                items={[
+                  { label: "한국 통신 꿀팁", href: "/tips" },
+                  { label: tip.title }
+                ]}
+              />
+            )}
             {/* 카테고리 및 메타 정보 */}
             <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
               {tip.category_name && (
@@ -234,15 +255,26 @@ export default function TipDetail() {
                 {relatedTips.map((relatedTip) => (
                   <Link key={relatedTip.id} href={`/tips/${relatedTip.slug}`}>
                     <div className="group cursor-pointer border rounded-lg overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1">
-                      {relatedTip.thumbnail_url && (
-                        <div className="aspect-video relative overflow-hidden">
-                          <img
-                            src={relatedTip.thumbnail_url}
-                            alt={relatedTip.title}
-                            className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-                          />
-                        </div>
-                      )}
+                      <div className="aspect-video relative overflow-hidden bg-secondary/50">
+                        <img
+                          src={relatedTip.thumbnail_url || "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png"}
+                          alt={`${relatedTip.title} - 관련 한국 통신 꿀팁 이미지`}
+                          loading="lazy"
+                          width={400}
+                          height={225}
+                          className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                          onError={(e) => {
+                            // 이미지 로드 실패 시 기본 이미지로 대체
+                            const target = e.target as HTMLImageElement;
+                            if (target.src !== "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png") {
+                              target.src = "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png";
+                            } else {
+                              // 기본 이미지도 실패하면 숨김
+                              target.style.display = "none";
+                            }
+                          }}
+                        />
+                      </div>
                       <div className="p-4">
                         {relatedTip.category_name && (
                           <Badge variant="secondary" className="text-xs mb-2">

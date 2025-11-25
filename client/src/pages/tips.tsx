@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useTips, useTipCategories, type Tip, type TipFilters } from "@/hooks/useTips";
 import { Spinner } from "@/components/ui/spinner";
 import { SEOHead } from "@/components/seo/SEOHead";
+import { Breadcrumb } from "@/components/seo/Breadcrumb";
 import { format } from "date-fns";
 
 export default function Tips() {
@@ -71,6 +72,7 @@ export default function Tips() {
       />
       <div className="bg-secondary/30 py-16 border-b">
         <div className="container mx-auto px-4">
+          <Breadcrumb items={[{ label: "한국 통신 꿀팁" }]} />
           <h1 className="text-4xl font-heading font-bold mb-4">한국 통신 꿀팁</h1>
           <p className="text-muted-foreground text-lg max-w-2xl">
             한국 여행과 생활에 도움이 되는 유용한 통신 정보를 확인하세요.
@@ -117,20 +119,37 @@ export default function Tips() {
 
         {/* Featured Tip (최신) */}
         {!isLoading && featuredTip && (
-          <div className="grid lg:grid-cols-2 gap-8 mb-12">
+          <>
+            <h2 className="text-2xl font-heading font-bold mb-6">주요 꿀팁</h2>
+            <div className="grid lg:grid-cols-2 gap-8 mb-12">
             <Link href={`/tips/${featuredTip.slug}`}>
               <div className="group relative rounded-2xl overflow-hidden aspect-video lg:aspect-[2/1] border cursor-pointer">
-                {featuredTip.thumbnail_url ? (
-                  <img
-                    src={featuredTip.thumbnail_url}
-                    alt={featuredTip.title}
-                    className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-secondary/50 flex items-center justify-center">
-                    <span className="text-muted-foreground">이미지 없음</span>
-                  </div>
-                )}
+                <img
+                  src={featuredTip.thumbnail_url || "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png"}
+                  alt={`${featuredTip.title} - 한국 통신 꿀팁 대표 이미지`}
+                  loading="eager"
+                  fetchPriority="high"
+                  width={800}
+                  height={400}
+                  className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                  onError={(e) => {
+                    // 이미지 로드 실패 시 기본 이미지로 대체
+                    const target = e.target as HTMLImageElement;
+                    if (target.src !== "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png") {
+                      target.src = "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png";
+                    } else {
+                      // 기본 이미지도 실패하면 배경색만 표시
+                      target.style.display = "none";
+                      const parent = target.parentElement;
+                      if (parent && !parent.querySelector(".fallback-placeholder")) {
+                        const placeholder = document.createElement("div");
+                        placeholder.className = "fallback-placeholder w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center";
+                        placeholder.innerHTML = `<span class="text-muted-foreground">이미지 없음</span>`;
+                        parent.appendChild(placeholder);
+                      }
+                    }
+                  }}
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-6 flex flex-col justify-end text-white">
                   {featuredTip.category_name && (
                     <Badge className="w-fit mb-3 bg-primary hover:bg-primary/90 border-none text-primary-foreground">
@@ -154,24 +173,38 @@ export default function Tips() {
                 </div>
               </div>
             </Link>
-          </div>
+            </div>
+          </>
         )}
 
         {/* 다른 꿀팁 목록 */}
         {!isLoading && otherTips.length > 0 && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+          <>
+            <h2 className="text-2xl font-heading font-bold mb-6">모든 꿀팁</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             {otherTips.map((tip) => (
               <Link key={tip.id} href={`/tips/${tip.slug}`}>
                 <Card className="h-full hover:shadow-lg transition-all cursor-pointer group hover:-translate-y-1">
-                  {tip.thumbnail_url && (
-                    <div className="aspect-video relative overflow-hidden rounded-t-xl">
-                      <img
-                        src={tip.thumbnail_url}
-                        alt={tip.title}
-                        className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-                      />
-                    </div>
-                  )}
+                  <div className="aspect-video relative overflow-hidden rounded-t-xl bg-secondary/50">
+                    <img
+                      src={tip.thumbnail_url || "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png"}
+                      alt={`${tip.title} - 한국 통신 꿀팁 이미지`}
+                      loading="lazy"
+                      width={400}
+                      height={225}
+                      className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                      onError={(e) => {
+                        // 이미지 로드 실패 시 기본 이미지로 대체
+                        const target = e.target as HTMLImageElement;
+                        if (target.src !== "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png") {
+                          target.src = "https://koreausimguide.com/diverse_travelers_in_seoul_using_smartphones.png";
+                        } else {
+                          // 기본 이미지도 실패하면 숨김
+                          target.style.display = "none";
+                        }
+                      }}
+                    />
+                  </div>
                   <CardHeader>
                     <div className="flex items-center justify-between mb-2">
                       {tip.category_name && (
@@ -207,8 +240,9 @@ export default function Tips() {
                   </CardFooter>
                 </Card>
               </Link>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
 
         {/* 꿀팁 없음 */}

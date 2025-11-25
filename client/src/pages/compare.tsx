@@ -8,6 +8,7 @@ import { Link } from "wouter";
 import { usePlans, useComparePlans, type Plan, type PlanFilters } from "@/hooks/usePlans";
 import { Spinner } from "@/components/ui/spinner";
 import { SEOHead } from "@/components/seo/SEOHead";
+import { Breadcrumb } from "@/components/seo/Breadcrumb";
 
 // 통신사 데이터 (API에서 가져올 수도 있지만 일단 하드코딩)
 const carriers = [
@@ -98,15 +99,19 @@ export default function Compare() {
         structuredData={structuredData}
       />
       <div className="bg-secondary/30 py-12 border-b">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl font-heading font-bold mb-4">요금제 비교</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            한국의 주요 통신사 요금제를 한눈에 비교하세요. 여행 기간과 데이터 사용량에 맞는 최적의 플랜을 찾아드립니다.
-          </p>
+        <div className="container mx-auto px-4">
+          <Breadcrumb items={[{ label: "요금제 비교" }]} />
+          <div className="text-center">
+            <h1 className="text-4xl font-heading font-bold mb-4">요금제 비교</h1>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              한국의 주요 통신사 요금제를 한눈에 비교하세요. 여행 기간과 데이터 사용량에 맞는 최적의 플랜을 찾아드립니다.
+            </p>
+          </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        <h2 className="sr-only">필터 및 검색</h2>
         {/* 필터 UI */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -320,7 +325,9 @@ export default function Compare() {
 
         {/* 요금제 목록 */}
         {!isLoading && !error && plans && plans.length > 0 && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <>
+            <h2 className="text-2xl font-heading font-bold mb-6">추천 요금제</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {plans.map((plan) => (
               <Card
                 key={plan.id}
@@ -437,7 +444,8 @@ export default function Compare() {
                 </CardFooter>
               </Card>
             ))}
-          </div>
+            </div>
+          </>
         )}
 
         {/* 요금제 없음 */}

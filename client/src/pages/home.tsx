@@ -71,7 +71,11 @@ export default function Home() {
               <div className="relative aspect-square md:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl ring-1 ring-border/50">
                 <img 
                   src={heroImage} 
-                  alt="Travelers in Korea" 
+                  alt="한국 여행객들이 서울에서 스마트폰으로 유심/eSIM 정보를 확인하는 모습" 
+                  loading="eager"
+                  fetchPriority="high"
+                  width={800}
+                  height={600}
                   className="object-cover w-full h-full hover:scale-105 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none"></div>
@@ -157,15 +161,26 @@ export default function Home() {
                 {latestTips.map((tip) => (
                   <Link key={tip.id} href={`/tips/${tip.slug}`}>
                     <Card className="h-full hover:shadow-lg transition-all cursor-pointer group hover:-translate-y-1">
-                      {tip.thumbnail_url && (
-                        <div className="aspect-video relative overflow-hidden rounded-t-xl">
-                          <img 
-                            src={tip.thumbnail_url} 
-                            alt={tip.title} 
-                            className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105" 
-                          />
-                        </div>
-                      )}
+                      <div className="aspect-video relative overflow-hidden rounded-t-xl bg-secondary/50">
+                        <img 
+                          src={tip.thumbnail_url || heroImage} 
+                          alt={`${tip.title} - 한국 통신 꿀팁 이미지`}
+                          loading="lazy"
+                          width={400}
+                          height={225}
+                          className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                          onError={(e) => {
+                            // 이미지 로드 실패 시 기본 이미지로 대체
+                            const target = e.target as HTMLImageElement;
+                            if (target.src !== heroImage) {
+                              target.src = heroImage;
+                            } else {
+                              // 기본 이미지도 실패하면 숨김
+                              target.style.display = "none";
+                            }
+                          }}
+                        />
+                      </div>
                       <CardContent className="pt-6">
                         {tip.category_name && (
                           <div className="text-xs text-muted-foreground mb-2">{tip.category_name}</div>

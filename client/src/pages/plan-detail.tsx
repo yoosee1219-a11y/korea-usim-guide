@@ -7,6 +7,7 @@ import { Link, useRoute } from "wouter";
 import { usePlan } from "@/hooks/usePlans";
 import { Spinner } from "@/components/ui/spinner";
 import { SEOHead } from "@/components/seo/SEOHead";
+import { Breadcrumb } from "@/components/seo/Breadcrumb";
 
 export default function PlanDetail() {
   const [match, params] = useRoute("/plans/:id");
@@ -99,11 +100,12 @@ export default function PlanDetail() {
         {/* Header */}
         <div className="bg-secondary/30 py-12 border-b">
           <div className="container mx-auto px-4">
-            <Link href="/compare">
-              <Button variant="ghost" size="sm" className="mb-4 gap-2">
-                <ArrowLeft className="h-4 w-4" /> 요금제 비교로
-              </Button>
-            </Link>
+            <Breadcrumb
+              items={[
+                { label: "요금제 비교", href: "/compare" },
+                { label: plan.name }
+              ]}
+            />
             <div className="flex items-center gap-3 mb-4">
               <Badge variant="outline" className="text-sm">
                 {plan.payment_type === "prepaid" ? "선불" : "후불"}
@@ -129,7 +131,7 @@ export default function PlanDetail() {
             {/* Plan Details */}
             <Card className="mb-6">
               <CardHeader>
-                <CardTitle>요금제 상세 정보</CardTitle>
+                <h2 className="text-2xl font-heading font-bold">요금제 상세 정보</h2>
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 gap-4">
@@ -236,12 +238,13 @@ export default function PlanDetail() {
               </CardContent>
             </Card>
 
-            {/* Supported/Unsupported Features */}
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">지원</CardTitle>
-                </CardHeader>
+                    {/* Supported/Unsupported Features */}
+                    <h2 className="text-2xl font-heading font-bold mb-6">지원 및 미지원 기능</h2>
+                    <div className="grid md:grid-cols-2 gap-6 mb-6">
+                      <Card>
+                        <CardHeader>
+                          <h3 className="text-lg font-heading font-bold">지원</h3>
+                        </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
@@ -263,10 +266,10 @@ export default function PlanDetail() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">미지원</CardTitle>
-                </CardHeader>
+                      <Card>
+                        <CardHeader>
+                          <h3 className="text-lg font-heading font-bold">미지원</h3>
+                        </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
@@ -286,7 +289,7 @@ export default function PlanDetail() {
             {/* Overage Charges */}
             <Card className="mb-6">
               <CardHeader>
-                <CardTitle className="text-lg">기본 제공 초과 시</CardTitle>
+                <h2 className="text-2xl font-heading font-bold">기본 제공 초과 시</h2>
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-muted-foreground mb-4">
