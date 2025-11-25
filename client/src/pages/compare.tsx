@@ -505,11 +505,14 @@ export default function Compare() {
 
       {/* 비교 모달 */}
       {showComparison && comparePlans && comparePlans.length > 0 && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <Card className="w-full max-w-6xl max-h-[90vh] overflow-y-auto shadow-2xl border-2 bg-gradient-to-br from-background to-secondary/10 animate-in zoom-in-95 duration-300">
-            <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 border-b">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={closeComparison}>
+          <Card 
+            className="w-full max-w-6xl max-h-[90vh] overflow-y-auto shadow-2xl border-2 border-primary/30 bg-background animate-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader className="bg-gradient-to-r from-primary/20 to-primary/10 border-b-2 border-primary/30">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                <CardTitle className="text-2xl md:text-3xl font-bold text-foreground">
                   요금제 비교
                 </CardTitle>
                 <Button variant="ghost" size="icon" onClick={closeComparison} className="hover:bg-destructive/10 hover:text-destructive rounded-full">
@@ -517,16 +520,16 @@ export default function Compare() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-6 bg-background">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="border-b-2 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
-                      <th className="text-left p-4 font-bold text-foreground">항목</th>
+                    <tr className="border-b-2 border-primary/40 bg-gradient-to-r from-primary/15 to-primary/5">
+                      <th className="text-left p-4 font-bold text-foreground text-base">항목</th>
                       {comparePlans.map((plan) => (
-                        <th key={plan.id} className="text-left p-4 font-bold">
-                          <div className="text-base md:text-lg">{plan.name}</div>
-                          <div className="text-sm font-normal text-muted-foreground mt-1">
+                        <th key={plan.id} className="text-left p-4 font-bold border-l border-border/50">
+                          <div className="text-base md:text-lg font-bold text-foreground">{plan.name}</div>
+                          <div className="text-sm font-medium text-muted-foreground mt-1">
                             {plan.carrier_name_ko}
                           </div>
                         </th>
@@ -534,85 +537,85 @@ export default function Compare() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b hover:bg-secondary/30 transition-colors">
-                      <td className="p-4 font-semibold text-foreground">가격</td>
+                    <tr className="border-b border-border/50 hover:bg-secondary/50 transition-colors bg-background">
+                      <td className="p-4 font-bold text-foreground bg-secondary/30">가격</td>
                       {comparePlans.map((plan) => (
-                        <td key={plan.id} className="p-4 text-primary font-semibold">
+                        <td key={plan.id} className="p-4 text-primary font-bold text-lg border-l border-border/50">
                           {formatPrice(plan.price_krw)}
                         </td>
                       ))}
                     </tr>
-                    <tr className="border-b hover:bg-secondary/30 transition-colors">
-                      <td className="p-4 font-semibold text-foreground">데이터</td>
+                    <tr className="border-b border-border/50 hover:bg-secondary/50 transition-colors bg-background">
+                      <td className="p-4 font-bold text-foreground bg-secondary/30">데이터</td>
                       {comparePlans.map((plan) => (
-                        <td key={plan.id} className="p-4 font-medium">
+                        <td key={plan.id} className="p-4 font-semibold text-foreground border-l border-border/50">
                           {formatData(plan)}
                         </td>
                       ))}
                     </tr>
-                    <tr className="border-b hover:bg-secondary/30 transition-colors">
-                      <td className="p-4 font-semibold text-foreground">유효기간</td>
+                    <tr className="border-b border-border/50 hover:bg-secondary/50 transition-colors bg-background">
+                      <td className="p-4 font-bold text-foreground bg-secondary/30">유효기간</td>
                       {comparePlans.map((plan) => (
-                        <td key={plan.id} className="p-4 font-medium">
+                        <td key={plan.id} className="p-4 font-semibold text-foreground border-l border-border/50">
                           {plan.validity_days}일
                         </td>
                       ))}
                     </tr>
-                    <tr className="border-b hover:bg-secondary/30 transition-colors">
-                      <td className="p-4 font-semibold text-foreground">결제 방식</td>
+                    <tr className="border-b border-border/50 hover:bg-secondary/50 transition-colors bg-background">
+                      <td className="p-4 font-bold text-foreground bg-secondary/30">결제 방식</td>
                       {comparePlans.map((plan) => (
-                        <td key={plan.id} className="p-4">
-                          <Badge variant="outline" className="text-xs px-2.5 py-0.5 border-primary/30 bg-primary/5 text-primary">
+                        <td key={plan.id} className="p-4 border-l border-border/50">
+                          <Badge variant="outline" className="text-xs px-3 py-1 border-primary/50 bg-primary/10 text-primary font-semibold">
                             {plan.payment_type === "prepaid" ? "선불" : "후불"}
                           </Badge>
                         </td>
                       ))}
                     </tr>
-                    <tr className="border-b hover:bg-secondary/30 transition-colors">
-                      <td className="p-4 font-semibold text-foreground">공항 수령</td>
+                    <tr className="border-b border-border/50 hover:bg-secondary/50 transition-colors bg-background">
+                      <td className="p-4 font-bold text-foreground bg-secondary/30">공항 수령</td>
                       {comparePlans.map((plan) => (
-                        <td key={plan.id} className="p-4">
+                        <td key={plan.id} className="p-4 border-l border-border/50">
                           {plan.airport_pickup ? (
-                            <span className="text-green-600 font-semibold">✓ 가능</span>
+                            <span className="text-green-700 font-bold text-base">✓ 가능</span>
                           ) : (
-                            <span className="text-muted-foreground">✗ 불가능</span>
+                            <span className="text-muted-foreground font-medium">✗ 불가능</span>
                           )}
                         </td>
                       ))}
                     </tr>
-                    <tr className="border-b hover:bg-secondary/30 transition-colors">
-                      <td className="p-4 font-semibold text-foreground">SIM 타입</td>
+                    <tr className="border-b border-border/50 hover:bg-secondary/50 transition-colors bg-background">
+                      <td className="p-4 font-bold text-foreground bg-secondary/30">SIM 타입</td>
                       {comparePlans.map((plan) => (
-                        <td key={plan.id} className="p-4">
+                        <td key={plan.id} className="p-4 border-l border-border/50">
                           <div className="flex flex-wrap gap-2">
                             {plan.physical_sim && (
-                              <Badge variant="secondary" className="text-xs px-2.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200">USIM</Badge>
+                              <Badge variant="secondary" className="text-xs px-3 py-1 bg-blue-100 text-blue-800 border-blue-300 font-semibold">USIM</Badge>
                             )}
                             {plan.esim_support && (
-                              <Badge variant="secondary" className="text-xs px-2.5 py-0.5 bg-purple-50 text-purple-700 border-purple-200">eSIM</Badge>
+                              <Badge variant="secondary" className="text-xs px-3 py-1 bg-purple-100 text-purple-800 border-purple-300 font-semibold">eSIM</Badge>
                             )}
                             {!plan.physical_sim && !plan.esim_support && (
-                              <span className="text-muted-foreground text-sm">-</span>
+                              <span className="text-muted-foreground text-sm font-medium">-</span>
                             )}
                           </div>
                         </td>
                       ))}
                     </tr>
                     {comparePlans.some((p) => p.features && p.features.length > 0) && (
-                      <tr className="border-b">
-                        <td className="p-4 font-semibold">특장점</td>
+                      <tr className="border-b border-border/50 bg-background">
+                        <td className="p-4 font-bold text-foreground bg-secondary/30">특장점</td>
                         {comparePlans.map((plan) => (
-                          <td key={plan.id} className="p-4">
+                          <td key={plan.id} className="p-4 border-l border-border/50">
                             {plan.features && plan.features.length > 0 ? (
-                              <ul className="list-disc list-inside space-y-1">
+                              <ul className="list-disc list-inside space-y-1.5">
                                 {plan.features.map((feature, i) => (
-                                  <li key={i} className="text-sm">
+                                  <li key={i} className="text-sm text-foreground font-medium leading-relaxed">
                                     {feature}
                                   </li>
                                 ))}
                               </ul>
                             ) : (
-                              "-"
+                              <span className="text-muted-foreground font-medium">-</span>
                             )}
                           </td>
                         ))}
