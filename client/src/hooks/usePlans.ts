@@ -57,7 +57,10 @@ export function usePlans(filters: PlanFilters = {}) {
       const data = await apiPost<PlansResponse>("/plans", filters);
       return data.plans;
     },
-    staleTime: 1000 * 60 * 5, // 5분
+    staleTime: 1000 * 60 * 10, // 10분 (5분 → 10분으로 증가)
+    gcTime: 1000 * 60 * 30, // 30분 (이전 cacheTime, 가비지 컬렉션 시간)
+    refetchOnWindowFocus: false, // 윈도우 포커스 시 자동 재요청 비활성화
+    refetchOnMount: false, // 마운트 시 재요청 비활성화 (캐시 사용)
   });
 }
 
@@ -69,6 +72,10 @@ export function usePlan(planId: string) {
       return data.plan;
     },
     enabled: !!planId,
+    staleTime: 1000 * 60 * 10, // 10분
+    gcTime: 1000 * 60 * 30, // 30분
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 }
 
@@ -82,6 +89,9 @@ export function useComparePlans(planIds: string[]) {
       return data.plans;
     },
     enabled: planIds.length > 0,
+    staleTime: 1000 * 60 * 5, // 5분 (비교는 자주 변경될 수 있음)
+    gcTime: 1000 * 60 * 15, // 15분
+    refetchOnWindowFocus: false,
   });
 }
 
