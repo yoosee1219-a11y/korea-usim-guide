@@ -12,10 +12,12 @@ const pool = new Pool({
     ? { rejectUnauthorized: false } 
     : false,
   // Vercel Serverless 환경에 최적화된 설정
-  max: 10, // 최대 연결 수 (Serverless에 적합)
+  // 중요: Supabase Session Pooler는 제한된 연결 수를 가지므로, 
+  // Serverless에서는 각 인스턴스마다 1개 연결만 사용
+  max: 1, // 최대 연결 수를 1로 제한 (Session Pooler 제한 회피)
   // min은 Serverless에서 제거 (요청마다 새 인스턴스 생성 가능)
-  idleTimeoutMillis: 30000, // 30초 동안 사용되지 않은 연결은 종료
-  connectionTimeoutMillis: 30000, // 30초로 증가 (10초 → 30초)
+  idleTimeoutMillis: 10000, // 10초로 단축 (빠른 연결 해제)
+  connectionTimeoutMillis: 30000, // 30초
   // 연결 유지 설정
   keepAlive: true,
   keepAliveInitialDelayMillis: 10000,
