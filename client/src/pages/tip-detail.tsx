@@ -84,19 +84,25 @@ export default function TipDetail() {
         "@type": "ListItem",
         "position": 1,
         "name": "홈",
-        "item": "https://koreausimguide.com"
+        "item": {
+          "@id": "https://koreausimguide.com"
+        }
       },
       {
         "@type": "ListItem",
         "position": 2,
         "name": "한국 통신 꿀팁",
-        "item": "https://koreausimguide.com/tips"
+        "item": {
+          "@id": "https://koreausimguide.com/tips"
+        }
       },
       {
         "@type": "ListItem",
         "position": 3,
         "name": tip.title,
-        "item": `https://koreausimguide.com/tips/${tip.slug || tip.id}`
+        "item": {
+          "@id": `https://koreausimguide.com/tips/${tip.slug || tip.id}`
+        }
       }
     ]
   } : null;

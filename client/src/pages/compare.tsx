@@ -98,13 +98,17 @@ export default function Compare() {
         "@type": "ListItem",
         "position": 1,
         "name": "홈",
-        "item": "https://koreausimguide.com"
+        "item": {
+          "@id": "https://koreausimguide.com"
+        }
       },
       {
         "@type": "ListItem",
         "position": 2,
         "name": "요금제 비교",
-        "item": "https://koreausimguide.com/compare"
+        "item": {
+          "@id": "https://koreausimguide.com/compare"
+        }
       }
     ]
   };

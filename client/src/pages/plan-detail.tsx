@@ -54,19 +54,25 @@ export default function PlanDetail() {
         "@type": "ListItem",
         "position": 1,
         "name": "홈",
-        "item": "https://koreausimguide.com"
+        "item": {
+          "@id": "https://koreausimguide.com"
+        }
       },
       {
         "@type": "ListItem",
         "position": 2,
         "name": "요금제 비교",
-        "item": "https://koreausimguide.com/compare"
+        "item": {
+          "@id": "https://koreausimguide.com/compare"
+        }
       },
       {
         "@type": "ListItem",
         "position": 3,
         "name": plan.name,
-        "item": `https://koreausimguide.com/plans/${plan.id}`
+        "item": {
+          "@id": `https://koreausimguide.com/plans/${plan.id}`
+        }
       }
     ]
   };

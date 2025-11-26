@@ -55,13 +55,38 @@ export default function Tips() {
   const featuredTip = tips.length > 0 ? tips[0] : null;
   const otherTips = tips.slice(1);
 
-  const structuredData = {
+  const breadcrumbStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "홈",
+        "item": {
+          "@id": "https://koreausimguide.com"
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "한국 통신 꿀팁",
+        "item": {
+          "@id": "https://koreausimguide.com/tips"
+        }
+      }
+    ]
+  };
+
+  const collectionPageStructuredData = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "한국 통신 꿀팁",
     "description": "한국 여행과 생활에 도움이 되는 유용한 통신 정보를 확인하세요.",
     "url": "https://koreausimguide.com/tips"
   };
+
+  const structuredData = [breadcrumbStructuredData, collectionPageStructuredData];
 
   return (
     <Layout>
