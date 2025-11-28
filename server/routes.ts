@@ -6,16 +6,18 @@ import carriersRouter from "./routes/carriers.js";
 import plansRouter from "./routes/plans.js";
 import tipsRouter from "./routes/tips.js";
 import sitemapRouter from "./routes/sitemap.js";
+import translateRouter from "./routes/translate.js";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Sitemap 라우트 (인증 불필요, 먼저 등록하여 /api보다 우선)
   app.use("/", sitemapRouter);
-  
+
   // API 라우트 등록 (모두 /api 접두사 사용)
   app.use("/api/auth", authRouter);
   app.use("/api/carriers", carriersRouter);
   app.use("/api/plans", plansRouter);
   app.use("/api/tips", tipsRouter);
+  app.use("/api/translate", translateRouter);
 
   // use storage to perform CRUD operations on the storage interface
   // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
