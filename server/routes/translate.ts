@@ -54,20 +54,23 @@ async function translateFeatures(features: string[], targetLang: string): Promis
   return translated;
 }
 
-// POST /api/translate/plans - Translate all plans
+// POST /api/translate/plans - Translate plans in batches
 router.post("/plans", async (req, res) => {
   try {
-    console.log('Starting automatic plan translation...');
+    const { batch_size = 2, skip = 0 } = req.body;
+    console.log(`Starting batch translation (skip: ${skip}, batch_size: ${batch_size})...`);
 
-    // Fetch all plans
+    // Fetch plans for this batch only
     const result = await db.query(`
       SELECT id, name, description, features
       FROM plans
+      WHERE is_active = true
       ORDER BY id
-    `);
+      LIMIT $1 OFFSET $2
+    `, [batch_size, skip]);
 
     const plans = result.rows;
-    console.log(`Found ${plans.length} plans to translate`);
+    console.log(`Found ${plans.length} plans to translate in this batch`);
 
     let translatedCount = 0;
     const errors: string[] = [];
@@ -124,14 +127,30 @@ router.post("/plans", async (req, res) => {
       }
     }
 
+    // Check if there are more plans to process
+    const totalResult = await db.query(`
+      SELECT COUNT(*) as total FROM plans WHERE is_active = true
+    `);
+    const totalPlans = parseInt(totalResult.rows[0].total);
+    const hasMore = (skip + batch_size) < totalPlans;
+    const nextSkip = skip + batch_size;
+
     res.json({
       success: true,
-      message: 'Translation completed',
+      message: `Batch translation completed (${skip + 1}-${skip + plans.length} of ${totalPlans})`,
       stats: {
-        total: plans.length,
+        batch: plans.length,
         translated: translatedCount,
         failed: plans.length - translatedCount,
         languages: LANGUAGES.length,
+        total_plans: totalPlans,
+        processed: skip + plans.length,
+        remaining: totalPlans - (skip + plans.length),
+      },
+      pagination: {
+        has_more: hasMore,
+        next_skip: hasMore ? nextSkip : null,
+        batch_size,
       },
       errors: errors.length > 0 ? errors : undefined,
     });
