@@ -190,20 +190,48 @@ export async function getTipById(tipId: string): Promise<Tip | null> {
 
 // 특정 꿀팁 조회 (슬러그로)
 export async function getTipBySlug(slug: string, language: string = 'ko'): Promise<Tip | null> {
-  // DB 함수 사용: 요청한 언어가 없으면 한국어 원본 반환
+  // 1. 요청한 언어 버전 찾기
+  // 2. 없으면 한국어 원본 찾기 (폴백)
   const query = `
     SELECT
       t.*,
       tc.name as category_name
-    FROM get_tip_by_slug_and_language($1, $2) t
+    FROM tips t
     JOIN tip_categories tc ON t.category_id = tc.id
+    WHERE t.slug = $1
+      AND t.language = $2
+      AND t.is_published = true
+    LIMIT 1
+  `;
+
+  const fallbackQuery = `
+    SELECT
+      t.*,
+      tc.name as category_name
+    FROM tips t
+    JOIN tip_categories tc ON t.category_id = tc.id
+    WHERE t.slug = $1
+      AND t.language = 'ko'
+      AND t.is_published = true
     LIMIT 1
   `;
 
   try {
     return await queryWithRetry(async () => {
+      // 먼저 요청한 언어로 찾기
       const result = await db.query(query, [slug, language]);
-      return result.rows[0] || null;
+
+      if (result.rows[0]) {
+        return result.rows[0];
+      }
+
+      // 없으면 한국어 원본 반환 (폴백)
+      if (language !== 'ko') {
+        const fallbackResult = await db.query(fallbackQuery, [slug]);
+        return fallbackResult.rows[0] || null;
+      }
+
+      return null;
     });
   } catch (error) {
     console.error("Database query error in getTipBySlug:", error);
