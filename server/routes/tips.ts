@@ -38,12 +38,13 @@ router.post("/categories", async (req, res) => {
 router.post("/", async (req, res) => {
   const body = req.body || {};
   const filters: TipFilters = {};
-  
+
   try {
     if (body.category_id) filters.category_id = body.category_id;
     if (body.page !== undefined) filters.page = Number(body.page);
     if (body.limit !== undefined) filters.limit = Number(body.limit);
     if (body.is_published !== undefined) filters.is_published = Boolean(body.is_published);
+    if (body.language) filters.language = body.language;
 
     const result = await getTips(filters);
     res.json(result);
@@ -57,7 +58,7 @@ router.post("/", async (req, res) => {
       filters,
       body,
     });
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Failed to fetch tips",
       error: process.env.NODE_ENV === "development" ? errorMessage : undefined
     });
@@ -68,7 +69,10 @@ router.post("/", async (req, res) => {
 router.post("/slug/:slug", async (req, res) => {
   try {
     const { slug } = req.params;
-    const tip = await getTipBySlug(slug);
+    const body = req.body || {};
+    const language = body.language || 'ko';
+
+    const tip = await getTipBySlug(slug, language);
 
     if (!tip) {
       return res.status(404).json({ message: "Tip not found" });

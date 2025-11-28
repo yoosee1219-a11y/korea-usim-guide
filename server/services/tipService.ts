@@ -46,6 +46,8 @@ export interface Tip {
   published_at: Date | null;
   is_published: boolean;
   view_count: number;
+  language: string;
+  original_tip_id: string | null;
   seo_meta: {
     meta_title?: string;
     meta_description?: string;
@@ -61,6 +63,7 @@ export interface TipFilters {
   page?: number;
   limit?: number;
   is_published?: boolean;
+  language?: string;
 }
 
 export interface TipCategory {
@@ -98,6 +101,7 @@ export async function getTips(filters: TipFilters = {}): Promise<{ tips: Tip[]; 
   const limit = filters.limit || 10;
   const offset = (page - 1) * limit;
   const isPublished = filters.is_published !== undefined ? filters.is_published : true;
+  const language = filters.language || 'ko';
 
   const conditions: string[] = [];
   const params: any[] = [];
@@ -105,6 +109,9 @@ export async function getTips(filters: TipFilters = {}): Promise<{ tips: Tip[]; 
 
   conditions.push(`t.is_published = $${paramIndex++}`);
   params.push(isPublished);
+
+  conditions.push(`t.language = $${paramIndex++}`);
+  params.push(language);
 
   if (filters.category_id) {
     conditions.push(`t.category_id = $${paramIndex++}`);
@@ -122,7 +129,7 @@ export async function getTips(filters: TipFilters = {}): Promise<{ tips: Tip[]; 
 
   // 목록 조회
   const query = `
-    SELECT 
+    SELECT
       t.*,
       tc.name as category_name
     FROM tips t
@@ -182,20 +189,20 @@ export async function getTipById(tipId: string): Promise<Tip | null> {
 }
 
 // 특정 꿀팁 조회 (슬러그로)
-export async function getTipBySlug(slug: string): Promise<Tip | null> {
+export async function getTipBySlug(slug: string, language: string = 'ko'): Promise<Tip | null> {
+  // DB 함수 사용: 요청한 언어가 없으면 한국어 원본 반환
   const query = `
-    SELECT 
+    SELECT
       t.*,
       tc.name as category_name
-    FROM tips t
+    FROM get_tip_by_slug_and_language($1, $2) t
     JOIN tip_categories tc ON t.category_id = tc.id
-    WHERE t.slug = $1
     LIMIT 1
   `;
 
   try {
     return await queryWithRetry(async () => {
-      const result = await db.query(query, [slug]);
+      const result = await db.query(query, [slug, language]);
       return result.rows[0] || null;
     });
   } catch (error) {
