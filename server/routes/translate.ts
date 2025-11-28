@@ -149,18 +149,44 @@ router.post("/plans", async (req, res) => {
 // GET /api/translate/status - Check translation status
 router.get("/status", async (req, res) => {
   try {
+    // Check detailed translation status for all languages
     const result = await db.query(`
       SELECT
-        COUNT(*) as total,
-        COUNT(description_en) as en_count,
-        COUNT(description_vi) as vi_count,
-        COUNT(description_zh) as zh_count
+        COUNT(*) as total_plans,
+        COUNT(description_en) FILTER (WHERE description_en IS NOT NULL AND description_en != '') as en_count,
+        COUNT(description_vi) FILTER (WHERE description_vi IS NOT NULL AND description_vi != '') as vi_count,
+        COUNT(description_th) FILTER (WHERE description_th IS NOT NULL AND description_th != '') as th_count,
+        COUNT(description_tl) FILTER (WHERE description_tl IS NOT NULL AND description_tl != '') as tl_count,
+        COUNT(description_uz) FILTER (WHERE description_uz IS NOT NULL AND description_uz != '') as uz_count,
+        COUNT(description_ne) FILTER (WHERE description_ne IS NOT NULL AND description_ne != '') as ne_count,
+        COUNT(description_mn) FILTER (WHERE description_mn IS NOT NULL AND description_mn != '') as mn_count,
+        COUNT(description_id) FILTER (WHERE description_id IS NOT NULL AND description_id != '') as id_count,
+        COUNT(description_my) FILTER (WHERE description_my IS NOT NULL AND description_my != '') as my_count,
+        COUNT(description_zh) FILTER (WHERE description_zh IS NOT NULL AND description_zh != '') as zh_count,
+        COUNT(description_ru) FILTER (WHERE description_ru IS NOT NULL AND description_ru != '') as ru_count
       FROM plans
+      WHERE is_active = true
+    `);
+
+    // Get sample plan to show translation quality
+    const sample = await db.query(`
+      SELECT
+        id,
+        name,
+        description,
+        description_en,
+        description_vi,
+        description_zh
+      FROM plans
+      WHERE is_active = true
+      ORDER BY id
+      LIMIT 1
     `);
 
     res.json({
       success: true,
       stats: result.rows[0],
+      sample: sample.rows[0] || null,
     });
   } catch (error) {
     res.status(500).json({
