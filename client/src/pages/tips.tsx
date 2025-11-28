@@ -11,10 +11,12 @@ import { SEOHead } from "@/components/seo/SEOHead";
 import { Breadcrumb } from "@/components/seo/Breadcrumb";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 import { format } from "date-fns";
 
 export default function Tips() {
   const { currentLanguage } = useLanguage();
+  const { translations } = useTranslation();
   const [filters, setFilters] = useState<TipFilters>({ page: 1, limit: 10 });
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
 
@@ -101,10 +103,10 @@ export default function Tips() {
       />
       <div className="bg-secondary/30 py-16 border-b">
         <div className="container mx-auto px-4">
-          <Breadcrumb items={[{ label: "한국 통신 꿀팁" }]} />
-          <h1 className="text-4xl font-heading font-bold mb-4">한국 통신 꿀팁</h1>
+          <Breadcrumb items={[{ label: translations.tips.title }]} />
+          <h1 className="text-4xl font-heading font-bold mb-4">{translations.tips.title}</h1>
           <p className="text-muted-foreground text-lg max-w-2xl">
-            한국 여행과 생활에 도움이 되는 유용한 통신 정보를 확인하세요.
+            {translations.tips.description}
           </p>
         </div>
       </div>
@@ -115,7 +117,7 @@ export default function Tips() {
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-4">
               <Filter className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">카테고리</span>
+              <span className="text-sm font-medium">{translations.tips.category}</span>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button
@@ -123,7 +125,7 @@ export default function Tips() {
                 size="sm"
                 onClick={() => handleCategoryChange(undefined)}
               >
-                전체
+                {translations.common.all}
               </Button>
               {categories.map((category) => (
                 <Button
@@ -149,7 +151,7 @@ export default function Tips() {
         {/* Featured Tip (최신) */}
         {!isLoading && featuredTip && (
           <>
-            <h2 className="text-2xl font-heading font-bold mb-6">주요 꿀팁</h2>
+            <h2 className="text-2xl font-heading font-bold mb-6">{translations.tips.featured}</h2>
             <div className="grid lg:grid-cols-2 gap-8 mb-12">
             <Link href={`/tips/${featuredTip.slug}`}>
               <div className="group relative rounded-2xl overflow-hidden aspect-video lg:aspect-[2/1] border cursor-pointer">
@@ -183,7 +185,7 @@ export default function Tips() {
                         <Calendar className="h-3 w-3" /> {formatDate(featuredTip.published_at)}
                       </span>
                     )}
-                    <span>조회수: {featuredTip.view_count}</span>
+                    <span>{translations.common.viewCount}: {featuredTip.view_count}</span>
                   </div>
                 </div>
               </div>
@@ -195,7 +197,7 @@ export default function Tips() {
         {/* 다른 꿀팁 목록 */}
         {!isLoading && otherTips.length > 0 && (
           <>
-            <h2 className="text-2xl font-heading font-bold mb-6">모든 꿀팁</h2>
+            <h2 className="text-2xl font-heading font-bold mb-6">{translations.tips.allTips}</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             {otherTips.map((tip) => (
               <Link key={tip.id} href={`/tips/${tip.slug}`}>
@@ -235,7 +237,7 @@ export default function Tips() {
                       <CardDescription className="line-clamp-3">{tip.excerpt}</CardDescription>
                     )}
                     <div className="mt-4 text-xs text-muted-foreground">
-                      조회수: {tip.view_count}
+                      {translations.common.viewCount}: {tip.view_count}
                     </div>
                   </CardContent>
                   <CardFooter>
@@ -243,7 +245,7 @@ export default function Tips() {
                       variant="ghost"
                       className="w-full justify-between text-muted-foreground group-hover:text-primary"
                     >
-                      더 보기 <ChevronRight className="h-4 w-4" />
+                      {translations.common.readMore} <ChevronRight className="h-4 w-4" />
                     </Button>
                   </CardFooter>
                 </Card>
@@ -256,7 +258,7 @@ export default function Tips() {
         {/* 꿀팁 없음 */}
         {!isLoading && tips.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            등록된 꿀팁이 없습니다.
+            {translations.tips.noTips}
           </div>
         )}
 
@@ -269,7 +271,7 @@ export default function Tips() {
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
             >
-              이전
+              {translations.common.previous}
             </Button>
             <div className="flex gap-1">
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -302,7 +304,7 @@ export default function Tips() {
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
             >
-              다음
+              {translations.common.next}
             </Button>
           </div>
         )}

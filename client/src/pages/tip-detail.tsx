@@ -9,6 +9,7 @@ import { SEOHead } from "@/components/seo/SEOHead";
 import { Breadcrumb } from "@/components/seo/Breadcrumb";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
   generateHowToSchema,
   extractFAQsFromContent,
@@ -21,6 +22,7 @@ import { format } from "date-fns";
 
 export default function TipDetail() {
   const { currentLanguage } = useLanguage();
+  const { translations } = useTranslation();
   const [match, params] = useRoute("/tips/:id");
   const tipIdOrSlug = params?.id || "";
 
@@ -51,7 +53,7 @@ export default function TipDetail() {
     const wordsPerMinute = 200;
     const words = content.split(/\s+/).length;
     const minutes = Math.ceil(words / wordsPerMinute);
-    return `${minutes}분`;
+    return `${translations.tipDetail.readTime} ${minutes}분`;
   };
 
   if (isLoading) {
@@ -68,10 +70,10 @@ export default function TipDetail() {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-12 text-center">
-          <h1 className="text-2xl font-bold mb-4">꿀팁을 찾을 수 없습니다</h1>
-          <p className="text-muted-foreground mb-8">요청하신 꿀팁이 존재하지 않거나 삭제되었습니다.</p>
+          <h1 className="text-2xl font-bold mb-4">{translations.tipDetail.notFound.title}</h1>
+          <p className="text-muted-foreground mb-8">{translations.tipDetail.notFound.description}</p>
           <Link href="/tips">
-            <Button>꿀팁 목록으로 돌아가기</Button>
+            <Button>{translations.tipDetail.notFound.button}</Button>
           </Link>
         </div>
       </Layout>
@@ -189,7 +191,7 @@ export default function TipDetail() {
                 size="sm"
                 className="gap-2 shadow-lg backdrop-blur-md bg-background/50 hover:bg-background/80"
               >
-                <ArrowLeft className="h-4 w-4" /> 목록으로
+                <ArrowLeft className="h-4 w-4" /> {translations.common.backToList}
               </Button>
             </Link>
           </div>
@@ -219,10 +221,10 @@ export default function TipDetail() {
                   </span>
                 )}
                 <span className="flex items-center gap-1">
-                  <Eye className="h-4 w-4" /> 조회수 {tip.view_count}
+                  <Eye className="h-4 w-4" /> {translations.common.viewCount} {tip.view_count}
                 </span>
                 <span className="flex items-center gap-1">
-                  읽는 시간 약 {estimateReadTime(tip.content)}분
+                  {estimateReadTime(tip.content)}
                 </span>
               </div>
             </div>
@@ -250,7 +252,7 @@ export default function TipDetail() {
             {/* 공유 및 하단 */}
             <div className="mt-12 pt-8 border-t flex justify-between items-center flex-wrap gap-4">
               <div className="text-muted-foreground text-sm">
-                이 꿀팁이 도움이 되었나요?
+                {translations.tipDetail.helpful}
               </div>
               <Button
                 variant="outline"
@@ -265,11 +267,11 @@ export default function TipDetail() {
                     });
                   } else {
                     navigator.clipboard.writeText(window.location.href);
-                    alert("링크가 클립보드에 복사되었습니다.");
+                    alert(translations.tipDetail.linkCopied);
                   }
                 }}
               >
-                <Share2 className="h-4 w-4" /> 공유하기
+                <Share2 className="h-4 w-4" /> {translations.common.share}
               </Button>
             </div>
           </div>
@@ -277,7 +279,7 @@ export default function TipDetail() {
           {/* 관련 꿀팁 */}
           {relatedTips.length > 0 && (
             <div className="mt-16">
-              <h2 className="text-2xl font-bold mb-8">관련 꿀팁</h2>
+              <h2 className="text-2xl font-bold mb-8">{translations.tipDetail.relatedTips}</h2>
               <div className="grid md:grid-cols-3 gap-6">
                 {relatedTips.map((relatedTip) => (
                   <Link key={relatedTip.id} href={`/tips/${relatedTip.slug}`}>

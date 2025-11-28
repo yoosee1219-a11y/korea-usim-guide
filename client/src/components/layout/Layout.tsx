@@ -4,14 +4,16 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { translations } = useTranslation();
 
   const navItems = [
-    { href: "/compare", label: "요금제 비교" },
-    { href: "/tips", label: "한국 통신 꿀팁" },
+    { href: "/compare", label: translations.nav.compare },
+    { href: "/tips", label: translations.nav.tips },
   ];
 
   return (
@@ -91,28 +93,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div className="col-span-2">
               <h3 className="font-heading font-bold text-xl mb-4 text-primary">KOREAUSIMGUIDE</h3>
               <p className="text-muted-foreground max-w-md leading-relaxed">
-                Your trusted guide for Korea SIM cards, eSIMs, and telecom tips. 
-                Helping travelers stay connected in Korea with the best plans and prices.
+                {translations.footer.description}
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Menu</h4>
+              <h4 className="font-semibold mb-4">{translations.footer.menu}</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/compare"><a className="hover:text-primary transition-colors">요금제 비교</a></Link></li>
-                <li><Link href="/tips"><a className="hover:text-primary transition-colors">한국 통신 꿀팁</a></Link></li>
+                <li><Link href="/compare"><a className="hover:text-primary transition-colors">{translations.nav.compare}</a></Link></li>
+                <li><Link href="/tips"><a className="hover:text-primary transition-colors">{translations.nav.tips}</a></Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
+              <h4 className="font-semibold mb-4">{translations.footer.legal}</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-primary transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Contact Us</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">{translations.footer.privacy}</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">{translations.footer.terms}</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">{translations.footer.contact}</a></li>
               </ul>
             </div>
           </div>
           <div className="border-t mt-12 pt-8 text-center text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} KOREAUSIMGUIDE. All rights reserved.
+            &copy; {new Date().getFullYear()} KOREAUSIMGUIDE. {translations.footer.copyright}
           </div>
         </div>
       </footer>
