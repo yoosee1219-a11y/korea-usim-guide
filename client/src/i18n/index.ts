@@ -1,23 +1,32 @@
 import { Translation } from './types';
 import { ko } from './locales/ko';
 import { en } from './locales/en';
+import { vi } from './locales/vi';
+import { th } from './locales/th';
+import { tl } from './locales/tl';
+import { uz } from './locales/uz';
+import { ne } from './locales/ne';
+import { mn } from './locales/mn';
+import { id } from './locales/id';
+import { my } from './locales/my';
+import { zh } from './locales/zh';
+import { ru } from './locales/ru';
 import { type LanguageCode } from '@/contexts/LanguageContext';
 
-// 번역 데이터 맵
+// 번역 데이터 맵 (12개 언어 완전 지원)
 const translations: Record<LanguageCode, Translation> = {
-  ko,
-  en,
-  // 나머지 언어들은 현재 영어 fallback 사용 (향후 추가 예정)
-  vi: en, // 베트남어
-  th: en, // 태국어
-  tl: en, // 타갈로그어
-  uz: en, // 우즈베크어
-  ne: en, // 네팔어
-  mn: en, // 몽골어
-  id: en, // 인도네시아어
-  my: en, // 미얀마어
-  zh: en, // 중국어
-  ru: en, // 러시아어
+  ko, // 한국어
+  en, // 영어
+  vi, // 베트남어
+  th, // 태국어
+  tl, // 타갈로그어
+  uz, // 우즈베크어
+  ne, // 네팔어
+  mn, // 몽골어
+  id, // 인도네시아어
+  my, // 미얀마어
+  zh, // 중국어
+  ru, // 러시아어
 };
 
 /**
