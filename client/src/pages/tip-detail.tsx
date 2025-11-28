@@ -8,28 +8,31 @@ import { Badge } from "@/components/ui/badge";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { Breadcrumb } from "@/components/seo/Breadcrumb";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
-import { 
-  generateHowToSchema, 
-  extractFAQsFromContent, 
+import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  generateHowToSchema,
+  extractFAQsFromContent,
   generateFAQSchema,
-  generateTOC 
+  generateTOC
 } from "@/lib/schemaUtils";
 import { MarkdownRenderer } from "@/components/content/MarkdownRenderer";
 import { TableOfContents } from "@/components/content/TableOfContents";
 import { format } from "date-fns";
 
 export default function TipDetail() {
+  const { currentLanguage } = useLanguage();
   const [match, params] = useRoute("/tips/:id");
   const tipIdOrSlug = params?.id || "";
 
-  // 슬러그 또는 ID로 꿀팁 조회
-  const { data: tip, isLoading, error } = useTipBySlug(tipIdOrSlug);
+  // 슬러그 또는 ID로 꿀팁 조회 (현재 선택된 언어)
+  const { data: tip, isLoading, error } = useTipBySlug(tipIdOrSlug, currentLanguage);
 
-  // 관련 꿀팁 (같은 카테고리, 최신 3개)
+  // 관련 꿀팁 (같은 카테고리, 최신 3개, 현재 선택된 언어)
   const { data: relatedTipsData } = useTips({
     category_id: tip?.category_id,
     limit: 3,
     page: 1,
+    language: currentLanguage,
   });
   const relatedTips = relatedTipsData?.tips?.filter((t) => t.id !== tip?.id).slice(0, 3) || [];
 

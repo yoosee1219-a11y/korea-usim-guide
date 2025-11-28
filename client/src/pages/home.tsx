@@ -7,11 +7,18 @@ import { useTips } from "@/hooks/useTips";
 import { Spinner } from "@/components/ui/spinner";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { useLanguage } from "@/contexts/LanguageContext";
 import heroImage from "@assets/generated_images/diverse_travelers_in_seoul_using_smartphones.png";
 
 export default function Home() {
-  // 최신 꿀팁 3개 가져오기
-  const { data: tipsData, isLoading: tipsLoading } = useTips({ limit: 3, page: 1 });
+  const { currentLanguage } = useLanguage();
+
+  // 최신 꿀팁 3개 가져오기 (현재 선택된 언어)
+  const { data: tipsData, isLoading: tipsLoading } = useTips({
+    limit: 3,
+    page: 1,
+    language: currentLanguage
+  });
   const latestTips = tipsData?.tips || [];
 
   const structuredData = {

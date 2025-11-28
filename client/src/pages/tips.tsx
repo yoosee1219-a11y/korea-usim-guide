@@ -10,15 +10,18 @@ import { Spinner } from "@/components/ui/spinner";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { Breadcrumb } from "@/components/seo/Breadcrumb";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
 
 export default function Tips() {
+  const { currentLanguage } = useLanguage();
   const [filters, setFilters] = useState<TipFilters>({ page: 1, limit: 10 });
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
 
   const { data: tipsData, isLoading } = useTips({
     ...filters,
     category_id: selectedCategory,
+    language: currentLanguage,
   });
 
   const { data: categories } = useTipCategories();

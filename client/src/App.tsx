@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { getAuthToken } from "./lib/api.js";
 import { Spinner } from "@/components/ui/spinner";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 // 페이지 컴포넌트를 동적으로 로드 (코드 스플리팅)
 const Home = lazy(() => import("@/pages/home"));
@@ -49,10 +50,12 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <LanguageProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

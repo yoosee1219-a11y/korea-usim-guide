@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiPost } from "../lib/api.js";
+import { type LanguageCode } from "@/contexts/LanguageContext";
 
 export interface Tip {
   id: string;
@@ -12,6 +13,8 @@ export interface Tip {
   published_at: string | null;
   is_published: boolean;
   view_count: number;
+  language: LanguageCode;
+  original_tip_id: string | null;
   seo_meta: {
     meta_title?: string;
     meta_description?: string;
@@ -27,6 +30,7 @@ export interface TipFilters {
   page?: number;
   limit?: number;
   is_published?: boolean;
+  language?: LanguageCode;
 }
 
 export interface TipCategory {
@@ -71,11 +75,11 @@ export function useTip(tipId: string) {
   });
 }
 
-export function useTipBySlug(slug: string) {
+export function useTipBySlug(slug: string, language?: LanguageCode) {
   return useQuery<Tip>({
-    queryKey: ["tip-slug", slug],
+    queryKey: ["tip-slug", slug, language],
     queryFn: async () => {
-      const data = await apiPost<TipResponse>(`/tips/slug/${slug}`, {});
+      const data = await apiPost<TipResponse>(`/tips/slug/${slug}`, { language });
       return data.tip;
     },
     enabled: !!slug,
