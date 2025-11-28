@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiPost } from "../lib/api.js";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export interface Plan {
   id: string;
@@ -36,6 +37,7 @@ export interface PlanFilters {
   airport_pickup?: boolean;
   esim_support?: boolean;
   is_popular?: boolean;
+  lang?: string; // Language code
 }
 
 interface PlansResponse {
@@ -51,10 +53,18 @@ interface ComparePlansResponse {
 }
 
 export function usePlans(filters: PlanFilters = {}) {
+  const { currentLanguage } = useLanguage();
+
+  // Include current language in filters
+  const filtersWithLang = {
+    ...filters,
+    lang: currentLanguage,
+  };
+
   return useQuery<Plan[]>({
-    queryKey: ["plans", filters],
+    queryKey: ["plans", filtersWithLang],
     queryFn: async () => {
-      const data = await apiPost<PlansResponse>("/plans", filters);
+      const data = await apiPost<PlansResponse>("/plans", filtersWithLang);
       return data.plans;
     },
     staleTime: 1000 * 60 * 10, // 10분 (5분 → 10분으로 증가)
@@ -65,10 +75,12 @@ export function usePlans(filters: PlanFilters = {}) {
 }
 
 export function usePlan(planId: string) {
+  const { currentLanguage } = useLanguage();
+
   return useQuery<Plan>({
-    queryKey: ["plan", planId],
+    queryKey: ["plan", planId, currentLanguage],
     queryFn: async () => {
-      const data = await apiPost<PlanResponse>(`/plans/${planId}`, {});
+      const data = await apiPost<PlanResponse>(`/plans/${planId}`, { lang: currentLanguage });
       return data.plan;
     },
     enabled: !!planId,
@@ -80,11 +92,14 @@ export function usePlan(planId: string) {
 }
 
 export function useComparePlans(planIds: string[]) {
+  const { currentLanguage } = useLanguage();
+
   return useQuery<Plan[]>({
-    queryKey: ["compare-plans", planIds.join(",")],
+    queryKey: ["compare-plans", planIds.join(","), currentLanguage],
     queryFn: async () => {
       const data = await apiPost<ComparePlansResponse>("/plans/compare", {
         plan_ids: planIds,
+        lang: currentLanguage,
       });
       return data.plans;
     },

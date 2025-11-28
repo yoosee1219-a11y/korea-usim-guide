@@ -70,6 +70,7 @@ export interface PlanFilters {
   airport_pickup?: boolean;
   esim_support?: boolean;
   is_popular?: boolean;
+  lang?: string; // Language code (ko, en, vi, th, etc.)
 }
 
 // 요금제 목록 조회 (필터링 지원)
@@ -135,9 +136,43 @@ export async function getPlans(filters: PlanFilters = {}): Promise<Plan[]> {
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
+  // Get language code (default to 'ko')
+  const lang = filters.lang && filters.lang !== 'ko' ? filters.lang : null;
+
+  // Build language-specific column selection
+  let descriptionColumn = 'p.description';
+  let featuresColumn = 'p.features';
+
+  if (lang) {
+    // Use COALESCE to fallback to Korean if translation doesn't exist
+    descriptionColumn = `COALESCE(p.description_${lang}, p.description) as description`;
+    featuresColumn = `COALESCE(p.features_${lang}, p.features) as features`;
+  } else {
+    descriptionColumn = 'p.description';
+    featuresColumn = 'p.features';
+  }
+
   const query = `
-    SELECT 
-      p.*,
+    SELECT
+      p.id,
+      p.carrier_id,
+      p.plan_type,
+      p.payment_type,
+      p.name,
+      ${descriptionColumn},
+      p.data_amount_gb,
+      p.validity_days,
+      p.voice_minutes,
+      p.sms_count,
+      p.price_krw,
+      ${featuresColumn},
+      p.airport_pickup,
+      p.esim_support,
+      p.physical_sim,
+      p.is_popular,
+      p.is_active,
+      p.created_at,
+      p.updated_at,
       c.name_ko as carrier_name_ko,
       c.name_en as carrier_name_en
     FROM plans p
@@ -160,10 +195,38 @@ export async function getPlans(filters: PlanFilters = {}): Promise<Plan[]> {
 }
 
 // 특정 요금제 조회
-export async function getPlanById(planId: string): Promise<Plan | null> {
+export async function getPlanById(planId: string, lang?: string): Promise<Plan | null> {
+  // Build language-specific column selection
+  const langCode = lang && lang !== 'ko' ? lang : null;
+  let descriptionColumn = 'p.description';
+  let featuresColumn = 'p.features';
+
+  if (langCode) {
+    descriptionColumn = `COALESCE(p.description_${langCode}, p.description) as description`;
+    featuresColumn = `COALESCE(p.features_${langCode}, p.features) as features`;
+  }
+
   const query = `
-    SELECT 
-      p.*,
+    SELECT
+      p.id,
+      p.carrier_id,
+      p.plan_type,
+      p.payment_type,
+      p.name,
+      ${descriptionColumn},
+      p.data_amount_gb,
+      p.validity_days,
+      p.voice_minutes,
+      p.sms_count,
+      p.price_krw,
+      ${featuresColumn},
+      p.airport_pickup,
+      p.esim_support,
+      p.physical_sim,
+      p.is_popular,
+      p.is_active,
+      p.created_at,
+      p.updated_at,
       c.name_ko as carrier_name_ko,
       c.name_en as carrier_name_en
     FROM plans p
@@ -185,15 +248,43 @@ export async function getPlanById(planId: string): Promise<Plan | null> {
 }
 
 // 요금제 비교 (여러 ID)
-export async function comparePlans(planIds: string[]): Promise<Plan[]> {
+export async function comparePlans(planIds: string[], lang?: string): Promise<Plan[]> {
   if (planIds.length === 0) {
     return [];
   }
 
+  // Build language-specific column selection
+  const langCode = lang && lang !== 'ko' ? lang : null;
+  let descriptionColumn = 'p.description';
+  let featuresColumn = 'p.features';
+
+  if (langCode) {
+    descriptionColumn = `COALESCE(p.description_${langCode}, p.description) as description`;
+    featuresColumn = `COALESCE(p.features_${langCode}, p.features) as features`;
+  }
+
   // UUID 배열을 PostgreSQL 배열로 변환
   const query = `
-    SELECT 
-      p.*,
+    SELECT
+      p.id,
+      p.carrier_id,
+      p.plan_type,
+      p.payment_type,
+      p.name,
+      ${descriptionColumn},
+      p.data_amount_gb,
+      p.validity_days,
+      p.voice_minutes,
+      p.sms_count,
+      p.price_krw,
+      ${featuresColumn},
+      p.airport_pickup,
+      p.esim_support,
+      p.physical_sim,
+      p.is_popular,
+      p.is_active,
+      p.created_at,
+      p.updated_at,
       c.name_ko as carrier_name_ko,
       c.name_en as carrier_name_en
     FROM plans p

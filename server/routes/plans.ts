@@ -23,6 +23,7 @@ router.post("/", async (req, res) => {
     if (body.airport_pickup !== undefined) filters.airport_pickup = Boolean(body.airport_pickup);
     if (body.esim_support !== undefined) filters.esim_support = Boolean(body.esim_support);
     if (body.is_popular !== undefined) filters.is_popular = Boolean(body.is_popular);
+    if (body.lang) filters.lang = body.lang; // Add language parameter
 
     const plans = await getPlans(filters);
     res.json({ plans });
@@ -47,13 +48,13 @@ router.post("/", async (req, res) => {
 // POST /api/plans/compare - 요금제 비교
 router.post("/compare", async (req, res) => {
   try {
-    const { plan_ids } = req.body || {};
+    const { plan_ids, lang } = req.body || {};
 
     if (!plan_ids || !Array.isArray(plan_ids) || plan_ids.length === 0) {
       return res.status(400).json({ message: "plan_ids array is required" });
     }
 
-    const plans = await comparePlans(plan_ids);
+    const plans = await comparePlans(plan_ids, lang);
     res.json({ plans });
   } catch (error) {
     console.error("Error comparing plans:", error);
@@ -65,7 +66,8 @@ router.post("/compare", async (req, res) => {
 router.post("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const plan = await getPlanById(id);
+    const { lang } = req.body || {};
+    const plan = await getPlanById(id, lang);
 
     if (!plan) {
       return res.status(404).json({ message: "Plan not found" });
