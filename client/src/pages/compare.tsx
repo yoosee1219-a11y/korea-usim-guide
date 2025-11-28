@@ -11,6 +11,7 @@ import { SEOHead } from "@/components/seo/SEOHead";
 import { Breadcrumb } from "@/components/seo/Breadcrumb";
 import { CustomCheckbox } from "@/components/ui/CustomCheckbox";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // 통신사 데이터 (API에서 가져올 수도 있지만 일단 하드코딩)
 const carriers = [
@@ -21,6 +22,7 @@ const carriers = [
 ];
 
 export default function Compare() {
+  const { translations } = useTranslation();
   const [filters, setFilters] = useState<PlanFilters>({});
   const [selectedPlans, setSelectedPlans] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -60,18 +62,18 @@ export default function Compare() {
   // 데이터량 포맷팅 (개선: features에서 소진 후 속도 정보 추출)
   const formatData = (plan: Plan) => {
     const gb = plan.data_amount_gb;
-    const baseText = gb === null ? "제한 없음" : `${gb}GB`;
-    
+    const baseText = gb === null ? translations.compare.plan.unlimited : `${gb}GB`;
+
     // features에서 "데이터 소진 시" 또는 "소진시" 정보 찾기
     if (plan.features && Array.isArray(plan.features)) {
       const overageFeature = plan.features.find(
-        (f: string) => 
-          f.includes("소진") || 
-          f.includes("소진시") || 
+        (f: string) =>
+          f.includes("소진") ||
+          f.includes("소진시") ||
           f.includes("데이터 소진") ||
           (f.includes("Mbps") && (f.includes("무제한") || f.includes("제한")))
       );
-      
+
       if (overageFeature) {
         // "데이터 소진 시 3Mbps 무제한" 같은 텍스트 추출
         let overageText = overageFeature
@@ -79,14 +81,14 @@ export default function Compare() {
           .replace(/소진\s*시?/i, "")
           .replace(/.*?(\d+\s*Mbps.*?)/i, "$1")
           .trim();
-        
+
         // "3Mbps 무제한" 형식으로 정리
         if (overageText && !overageText.includes("소진")) {
-          return `${baseText} + 소진시 ${overageText}`;
+          return `${baseText} + ${translations.compare.plan.afterDepletion} ${overageText}`;
         }
       }
     }
-    
+
     return baseText;
   };
 
@@ -133,13 +135,13 @@ export default function Compare() {
       />
       <div className="bg-gradient-to-br from-primary/5 via-background to-primary/5 py-16 border-b">
         <div className="container mx-auto px-4">
-          <Breadcrumb items={[{ label: "요금제 비교" }]} />
+          <Breadcrumb items={[{ label: translations.compare.title }]} />
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              요금제 비교
+              {translations.compare.title}
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-              한국의 주요 통신사 요금제를 한눈에 비교하세요. 여행 기간과 데이터 사용량에 맞는 최적의 플랜을 찾아드립니다.
+              {translations.compare.description}
             </p>
           </div>
         </div>
@@ -156,7 +158,7 @@ export default function Compare() {
               className="gap-2 shadow-sm hover:shadow-md transition-shadow"
             >
               <Filter className="h-4 w-4" />
-              필터 {showFilters ? "숨기기" : "보기"}
+              {showFilters ? translations.compare.filters.hide : translations.compare.filters.show}
             </Button>
           </div>
 
@@ -165,7 +167,7 @@ export default function Compare() {
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 duration-300">
               <div className="flex items-center justify-center gap-3 bg-background/95 backdrop-blur-md border-2 border-primary/30 rounded-xl p-4 shadow-2xl max-w-fit">
                 <span className="text-sm font-semibold text-foreground bg-primary/10 px-4 py-2 rounded-full border border-primary/30">
-                  {selectedPlans.length}개 선택됨
+                  {selectedPlans.length}{translations.compare.selection.selected}
                 </span>
                 <Button
                   variant="default"
@@ -174,7 +176,7 @@ export default function Compare() {
                   size="lg"
                 >
                   <CompareIcon className="h-5 w-5" />
-                  비교하기
+                  {translations.compare.selection.compareButton}
                 </Button>
                 <Button
                   variant="ghost"
@@ -193,7 +195,7 @@ export default function Compare() {
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* 통신사 필터 */}
                 <div>
-                  <label className="text-sm font-medium mb-2 block">통신사</label>
+                  <label className="text-sm font-medium mb-2 block">{translations.compare.filters.carrier}</label>
                   <select
                     className="w-full px-3 py-2 border rounded-md"
                     value={filters.carrier_id || ""}
@@ -204,7 +206,7 @@ export default function Compare() {
                       })
                     }
                   >
-                    <option value="">전체</option>
+                    <option value="">{translations.common.all}</option>
                     {carriers.map((carrier) => (
                       <option key={carrier.id} value={carrier.id}>
                         {carrier.name}
@@ -215,7 +217,7 @@ export default function Compare() {
 
                 {/* 데이터량 최소 */}
                 <div>
-                  <label className="text-sm font-medium mb-2 block">최소 데이터 (GB)</label>
+                  <label className="text-sm font-medium mb-2 block">{translations.compare.filters.minData}</label>
                   <input
                     type="number"
                     className="w-full px-3 py-2 border rounded-md"
@@ -232,7 +234,7 @@ export default function Compare() {
 
                 {/* 데이터량 최대 */}
                 <div>
-                  <label className="text-sm font-medium mb-2 block">최대 데이터 (GB)</label>
+                  <label className="text-sm font-medium mb-2 block">{translations.compare.filters.maxData}</label>
                   <input
                     type="number"
                     className="w-full px-3 py-2 border rounded-md"
@@ -249,7 +251,7 @@ export default function Compare() {
 
                 {/* 가격 범위 */}
                 <div>
-                  <label className="text-sm font-medium mb-2 block">최대 가격 (원)</label>
+                  <label className="text-sm font-medium mb-2 block">{translations.compare.filters.maxPrice}</label>
                   <input
                     type="number"
                     className="w-full px-3 py-2 border rounded-md"
@@ -266,7 +268,7 @@ export default function Compare() {
 
                 {/* 공항 수령 */}
                 <div>
-                  <label className="text-sm font-medium mb-2 block">공항 수령</label>
+                  <label className="text-sm font-medium mb-2 block">{translations.compare.filters.airportPickup}</label>
                   <select
                     className="w-full px-3 py-2 border rounded-md"
                     value={filters.airport_pickup === undefined ? "" : filters.airport_pickup ? "true" : "false"}
@@ -277,15 +279,15 @@ export default function Compare() {
                       })
                     }
                   >
-                    <option value="">전체</option>
-                    <option value="true">가능</option>
-                    <option value="false">불가능</option>
+                    <option value="">{translations.common.all}</option>
+                    <option value="true">{translations.compare.filters.available}</option>
+                    <option value="false">{translations.compare.filters.unavailable}</option>
                   </select>
                 </div>
 
                 {/* eSIM 지원 */}
                 <div>
-                  <label className="text-sm font-medium mb-2 block">eSIM 지원</label>
+                  <label className="text-sm font-medium mb-2 block">{translations.compare.filters.esimSupport}</label>
                   <select
                     className="w-full px-3 py-2 border rounded-md"
                     value={filters.esim_support === undefined ? "" : filters.esim_support ? "true" : "false"}
@@ -296,15 +298,15 @@ export default function Compare() {
                       })
                     }
                   >
-                    <option value="">전체</option>
-                    <option value="true">지원</option>
-                    <option value="false">미지원</option>
+                    <option value="">{translations.common.all}</option>
+                    <option value="true">{translations.compare.filters.supported}</option>
+                    <option value="false">{translations.compare.filters.unsupported}</option>
                   </select>
                 </div>
 
                 {/* 결제 방식 (선불/후불) */}
                 <div>
-                  <label className="text-sm font-medium mb-2 block">결제 방식</label>
+                  <label className="text-sm font-medium mb-2 block">{translations.compare.filters.paymentType}</label>
                   <select
                     className="w-full px-3 py-2 border rounded-md"
                     value={filters.payment_type || ""}
@@ -315,15 +317,15 @@ export default function Compare() {
                       })
                     }
                   >
-                    <option value="">전체</option>
-                    <option value="prepaid">선불</option>
-                    <option value="postpaid">후불</option>
+                    <option value="">{translations.common.all}</option>
+                    <option value="prepaid">{translations.compare.filters.prepaid}</option>
+                    <option value="postpaid">{translations.compare.filters.postpaid}</option>
                   </select>
                 </div>
 
                 {/* 인기 요금제 */}
                 <div>
-                  <label className="text-sm font-medium mb-2 block">인기 요금제</label>
+                  <label className="text-sm font-medium mb-2 block">{translations.compare.filters.popular}</label>
                   <select
                     className="w-full px-3 py-2 border rounded-md"
                     value={filters.is_popular === undefined ? "" : filters.is_popular ? "true" : "false"}
@@ -334,15 +336,15 @@ export default function Compare() {
                       })
                     }
                   >
-                    <option value="">전체</option>
-                    <option value="true">인기만</option>
+                    <option value="">{translations.common.all}</option>
+                    <option value="true">{translations.compare.filters.popularOnly}</option>
                   </select>
                 </div>
               </div>
 
               <div className="flex gap-2 mt-4">
                 <Button onClick={resetFilters} variant="outline" size="sm">
-                  필터 초기화
+                  {translations.compare.filters.reset}
                 </Button>
               </div>
             </Card>
@@ -359,7 +361,7 @@ export default function Compare() {
         {/* 에러 상태 */}
         {error && (
           <div className="text-center py-12 text-red-500">
-            요금제를 불러오는데 실패했습니다. 다시 시도해주세요.
+            {translations.compare.error}
           </div>
         )}
 
@@ -367,7 +369,7 @@ export default function Compare() {
         {!isLoading && !error && plans && plans.length > 0 && (
           <>
             <h2 className="text-2xl md:text-3xl font-heading font-bold mb-8 text-center md:text-left">
-              추천 요금제
+              {translations.compare.recommended}
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {plans.map((plan) => (
@@ -384,7 +386,7 @@ export default function Compare() {
               >
                 {plan.is_popular && (
                   <div className="absolute top-0 right-0 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-bl-xl z-10 shadow-lg">
-                    ⭐ 인기
+                    {translations.compare.plan.popular}
                   </div>
                 )}
 
@@ -401,12 +403,12 @@ export default function Compare() {
                       {/* 결제 방식 배지 - 지원하는 것만 표시 */}
                       {plan.payment_type === "prepaid" && (
                         <Badge variant="outline" className="font-medium text-xs px-2.5 py-0.5 border-primary/30 bg-primary/5 text-primary">
-                          선불
+                          {translations.compare.filters.prepaid}
                         </Badge>
                       )}
                       {plan.payment_type === "postpaid" && (
                         <Badge variant="outline" className="font-medium text-xs px-2.5 py-0.5 border-primary/30 bg-primary/5 text-primary">
-                          후불
+                          {translations.compare.filters.postpaid}
                         </Badge>
                       )}
                       
@@ -435,13 +437,13 @@ export default function Compare() {
                 <CardContent className="flex-1">
                   <div className="space-y-3">
                     <div className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border border-primary/20 shadow-sm">
-                      <div className="text-xs text-muted-foreground mb-1.5 font-medium">데이터</div>
+                      <div className="text-xs text-muted-foreground mb-1.5 font-medium">{translations.compare.plan.data}</div>
                       <div className="font-bold text-lg text-foreground">{formatData(plan)}</div>
                     </div>
 
                     <div className="p-4 bg-gradient-to-br from-secondary/60 to-secondary/30 rounded-xl border border-border/50 shadow-sm">
-                      <div className="text-xs text-muted-foreground mb-1.5 font-medium">유효기간</div>
-                      <div className="font-bold text-lg text-foreground">{plan.validity_days}일</div>
+                      <div className="text-xs text-muted-foreground mb-1.5 font-medium">{translations.compare.plan.validity}</div>
+                      <div className="font-bold text-lg text-foreground">{plan.validity_days}{translations.compare.plan.days}</div>
                     </div>
 
                     {plan.description && (
@@ -468,7 +470,7 @@ export default function Compare() {
                     <div className="flex flex-wrap gap-2 mt-4">
                       {plan.airport_pickup && (
                         <Badge variant="secondary" className="text-xs px-3 py-1 bg-green-50 text-green-700 border-green-200">
-                          ✈️ 공항 수령
+                          ✈️ {translations.compare.filters.airportPickup}
                         </Badge>
                       )}
                     </div>
@@ -478,7 +480,7 @@ export default function Compare() {
                 <CardFooter className="pt-6 flex gap-3">
                   <Link href={`/plans/${plan.id}`} className="flex-1">
                     <Button variant="outline" className="w-full shadow-sm hover:shadow-md transition-all hover:bg-secondary">
-                      상세보기
+                      {translations.compare.plan.details}
                     </Button>
                   </Link>
                   <Button
@@ -490,7 +492,7 @@ export default function Compare() {
                     )}
                     onClick={() => togglePlanSelection(plan.id)}
                   >
-                    {selectedPlans.includes(plan.id) ? "✓ 선택됨" : "비교에 추가"}
+                    {selectedPlans.includes(plan.id) ? translations.compare.selection.inComparison : translations.compare.selection.addToCompare}
                   </Button>
                 </CardFooter>
               </Card>
@@ -502,7 +504,7 @@ export default function Compare() {
         {/* 요금제 없음 */}
         {!isLoading && !error && plans && plans.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            조건에 맞는 요금제가 없습니다. 필터를 조정해보세요.
+            {translations.compare.noResults}
           </div>
         )}
       </div>
@@ -517,7 +519,7 @@ export default function Compare() {
             <CardHeader className="bg-gradient-to-r from-primary/20 to-primary/10 border-b-2 border-primary/30">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-2xl md:text-3xl font-bold text-foreground">
-                  요금제 비교
+                  {translations.compare.modal.title}
                 </CardTitle>
                 <Button variant="ghost" size="icon" onClick={closeComparison} className="hover:bg-destructive/10 hover:text-destructive rounded-full">
                   <X className="h-5 w-5" />
@@ -529,7 +531,7 @@ export default function Compare() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b-2 border-primary/40 bg-gradient-to-r from-primary/15 to-primary/5">
-                      <th className="text-left p-4 font-bold text-foreground text-base">항목</th>
+                      <th className="text-left p-4 font-bold text-foreground text-base">{translations.compare.modal.item}</th>
                       {comparePlans.map((plan) => (
                         <th key={plan.id} className="text-left p-4 font-bold border-l border-border/50">
                           <div className="text-base md:text-lg font-bold text-foreground">{plan.name}</div>
@@ -542,7 +544,7 @@ export default function Compare() {
                   </thead>
                   <tbody>
                     <tr className="border-b border-border/50 hover:bg-secondary/50 transition-colors bg-background">
-                      <td className="p-4 font-bold text-foreground bg-secondary/30">가격</td>
+                      <td className="p-4 font-bold text-foreground bg-secondary/30">{translations.compare.modal.price}</td>
                       {comparePlans.map((plan) => (
                         <td key={plan.id} className="p-4 text-primary font-bold text-lg border-l border-border/50">
                           {formatPrice(plan.price_krw)}
@@ -550,7 +552,7 @@ export default function Compare() {
                       ))}
                     </tr>
                     <tr className="border-b border-border/50 hover:bg-secondary/50 transition-colors bg-background">
-                      <td className="p-4 font-bold text-foreground bg-secondary/30">데이터</td>
+                      <td className="p-4 font-bold text-foreground bg-secondary/30">{translations.compare.modal.data}</td>
                       {comparePlans.map((plan) => (
                         <td key={plan.id} className="p-4 font-semibold text-foreground border-l border-border/50">
                           {formatData(plan)}
@@ -558,37 +560,37 @@ export default function Compare() {
                       ))}
                     </tr>
                     <tr className="border-b border-border/50 hover:bg-secondary/50 transition-colors bg-background">
-                      <td className="p-4 font-bold text-foreground bg-secondary/30">유효기간</td>
+                      <td className="p-4 font-bold text-foreground bg-secondary/30">{translations.compare.modal.validity}</td>
                       {comparePlans.map((plan) => (
                         <td key={plan.id} className="p-4 font-semibold text-foreground border-l border-border/50">
-                          {plan.validity_days}일
+                          {plan.validity_days}{translations.compare.plan.days}
                         </td>
                       ))}
                     </tr>
                     <tr className="border-b border-border/50 hover:bg-secondary/50 transition-colors bg-background">
-                      <td className="p-4 font-bold text-foreground bg-secondary/30">결제 방식</td>
+                      <td className="p-4 font-bold text-foreground bg-secondary/30">{translations.compare.modal.paymentType}</td>
                       {comparePlans.map((plan) => (
                         <td key={plan.id} className="p-4 border-l border-border/50">
                           <Badge variant="outline" className="text-xs px-3 py-1 border-primary/50 bg-primary/10 text-primary font-semibold">
-                            {plan.payment_type === "prepaid" ? "선불" : "후불"}
+                            {plan.payment_type === "prepaid" ? translations.compare.filters.prepaid : translations.compare.filters.postpaid}
                           </Badge>
                         </td>
                       ))}
                     </tr>
                     <tr className="border-b border-border/50 hover:bg-secondary/50 transition-colors bg-background">
-                      <td className="p-4 font-bold text-foreground bg-secondary/30">공항 수령</td>
+                      <td className="p-4 font-bold text-foreground bg-secondary/30">{translations.compare.modal.airportPickup}</td>
                       {comparePlans.map((plan) => (
                         <td key={plan.id} className="p-4 border-l border-border/50">
                           {plan.airport_pickup ? (
-                            <span className="text-green-700 font-bold text-base">✓ 가능</span>
+                            <span className="text-green-700 font-bold text-base">✓ {translations.compare.filters.available}</span>
                           ) : (
-                            <span className="text-muted-foreground font-medium">✗ 불가능</span>
+                            <span className="text-muted-foreground font-medium">✗ {translations.compare.filters.unavailable}</span>
                           )}
                         </td>
                       ))}
                     </tr>
                     <tr className="border-b border-border/50 hover:bg-secondary/50 transition-colors bg-background">
-                      <td className="p-4 font-bold text-foreground bg-secondary/30">SIM 타입</td>
+                      <td className="p-4 font-bold text-foreground bg-secondary/30">{translations.compare.modal.simType}</td>
                       {comparePlans.map((plan) => (
                         <td key={plan.id} className="p-4 border-l border-border/50">
                           <div className="flex flex-wrap gap-2">
@@ -607,7 +609,7 @@ export default function Compare() {
                     </tr>
                     {comparePlans.some((p) => p.features && p.features.length > 0) && (
                       <tr className="border-b border-border/50 bg-background">
-                        <td className="p-4 font-bold text-foreground bg-secondary/30">특장점</td>
+                        <td className="p-4 font-bold text-foreground bg-secondary/30">{translations.compare.modal.features}</td>
                         {comparePlans.map((plan) => (
                           <td key={plan.id} className="p-4 border-l border-border/50">
                             {plan.features && plan.features.length > 0 ? (

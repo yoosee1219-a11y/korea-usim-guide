@@ -77,4 +77,58 @@ export interface Translation {
     contact: string;
     copyright: string;
   };
+  compare: {
+    title: string;
+    description: string;
+    filters: {
+      show: string;
+      hide: string;
+      carrier: string;
+      minData: string;
+      maxData: string;
+      maxPrice: string;
+      airportPickup: string;
+      esimSupport: string;
+      paymentType: string;
+      popular: string;
+      reset: string;
+      available: string;
+      unavailable: string;
+      supported: string;
+      unsupported: string;
+      prepaid: string;
+      postpaid: string;
+      popularOnly: string;
+    };
+    selection: {
+      selected: string;
+      compareButton: string;
+      addToCompare: string;
+      inComparison: string;
+    };
+    plan: {
+      data: string;
+      validity: string;
+      days: string;
+      price: string;
+      unlimited: string;
+      afterDepletion: string;
+      popular: string;
+      details: string;
+    };
+    error: string;
+    recommended: string;
+    noResults: string;
+    modal: {
+      title: string;
+      item: string;
+      price: string;
+      data: string;
+      validity: string;
+      paymentType: string;
+      airportPickup: string;
+      simType: string;
+      features: string;
+    };
+  };
 }
