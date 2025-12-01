@@ -1,11 +1,12 @@
 /**
- * Batch Translation Runner
- * Processes all plans in batches to avoid Vercel timeout
+ * Continue Translation from where it left off
+ * Starts from skip=7 to complete remaining 7 plans
  */
 
 const API_URL = 'https://koreausimguide.com/api/translate/plans';
-const BATCH_SIZE = 1; // Reduced to 1 to avoid timeout
-const DELAY_BETWEEN_BATCHES = 3000; // 3 seconds delay between batches
+const BATCH_SIZE = 1;
+const DELAY_BETWEEN_BATCHES = 3000;
+const START_FROM = 7; // Continue from 8th plan (0-indexed, so 7)
 
 async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -43,12 +44,13 @@ async function translateBatch(skip, batchSize) {
   return data;
 }
 
-async function translateAll() {
-  console.log('🌐 Starting batch translation for all plans...\n');
-  console.log(`Batch size: ${BATCH_SIZE} plans`);
+async function continueTranslation() {
+  console.log('🔄 Continuing translation from where it left off...\n');
+  console.log(`Starting from plan ${START_FROM + 1}`);
+  console.log(`Batch size: ${BATCH_SIZE} plan`);
   console.log(`Delay between batches: ${DELAY_BETWEEN_BATCHES}ms\n`);
 
-  let skip = 0;
+  let skip = START_FROM;
   let hasMore = true;
   let totalTranslated = 0;
   let totalFailed = 0;
@@ -72,7 +74,7 @@ async function translateAll() {
 
     const duration = Math.round((Date.now() - startTime) / 1000);
 
-    console.log('\n\n🎉 All batches completed!');
+    console.log('\n\n🎉 All remaining batches completed!');
     console.log('═'.repeat(50));
     console.log(`✅ Total translated: ${totalTranslated} plans`);
     console.log(`❌ Total failed: ${totalFailed} plans`);
@@ -89,4 +91,4 @@ async function translateAll() {
 }
 
 // Run the translation
-translateAll();
+continueTranslation();
