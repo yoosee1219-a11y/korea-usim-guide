@@ -37,13 +37,7 @@ export default defineConfig(async () => {
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
-      minify: 'terser',
-      terserOptions: {
-        compress: {
-          drop_console: true, // 프로덕션에서 console.log 제거
-          drop_debugger: true,
-        },
-      },
+      minify: 'esbuild', // esbuild 사용 (terser보다 빠르고 기본 포함)
       rollupOptions: {
         output: {
           manualChunks: {
