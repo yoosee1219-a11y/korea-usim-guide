@@ -30,6 +30,10 @@ export default function LoanCalculator() {
   const [welcomeDiscount, setWelcomeDiscount] = useState(2); // 2% 인하
   const [lgUplus, setLgUplus] = useState(false);
 
+  // 금리 입력 (직접 설정 가능)
+  const [welcomeBaseRate, setWelcomeBaseRate] = useState(16.9);
+  const [jeonbukBaseRate, setJeonbukBaseRate] = useState(14.5);
+
   // 대출 금액 입력 처리
   const handleAmountInputChange = (value: string) => {
     setAmountInput(value);
@@ -54,13 +58,13 @@ export default function LoanCalculator() {
 
   // 계산 결과
   const welcomeResult = useMemo(
-    () => calculateWelcomeLoan(amount, months, welcomeDiscount),
-    [amount, months, welcomeDiscount]
+    () => calculateWelcomeLoan(amount, months, welcomeDiscount, welcomeBaseRate),
+    [amount, months, welcomeDiscount, welcomeBaseRate]
   );
 
   const jeonbukResult = useMemo(
-    () => calculateJeonbukLoan(amount, months, lgUplus),
-    [amount, months, lgUplus]
+    () => calculateJeonbukLoan(amount, months, lgUplus, jeonbukBaseRate),
+    [amount, months, lgUplus, jeonbukBaseRate]
   );
 
   const comparison = useMemo(
@@ -193,26 +197,58 @@ export default function LoanCalculator() {
                 {(selectedBank === 'welcome' || selectedBank === 'compare') && (
                   <>
                     <Separator />
-                    <div className="space-y-2">
-                      <Label>웰컴: 금리 인하 옵션</Label>
-                      <Select
-                        value={welcomeDiscount.toString()}
-                        onValueChange={(v) => setWelcomeDiscount(Number(v))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {WELCOME_RATE_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.discount} value={opt.discount.toString()}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-gray-500">
-                        금리를 낮추면 수수료가 할인됩니다
-                      </p>
+                    <div className="space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <Label className="text-blue-900 font-semibold">💙 웰컴저축은행 옵션</Label>
+
+                      {/* 기본 금리 입력 */}
+                      <div className="space-y-2">
+                        <Label className="text-sm">기본 금리 (%)</Label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          min="1"
+                          max="30"
+                          value={welcomeBaseRate}
+                          onChange={(e) => setWelcomeBaseRate(Number(e.target.value))}
+                          className="h-10 bg-white"
+                        />
+                        <p className="text-xs text-blue-600">
+                          평균 16.9% (직접 입력 가능)
+                        </p>
+                      </div>
+
+                      {/* 금리 인하 옵션 */}
+                      <div className="space-y-2">
+                        <Label className="text-sm">금리 인하 옵션</Label>
+                        <Select
+                          value={welcomeDiscount.toString()}
+                          onValueChange={(v) => setWelcomeDiscount(Number(v))}
+                        >
+                          <SelectTrigger className="bg-white">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {WELCOME_RATE_OPTIONS.map((opt) => (
+                              <SelectItem key={opt.discount} value={opt.discount.toString()}>
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-blue-600">
+                          금리 인하 시 수수료 할인
+                        </p>
+                      </div>
+
+                      {/* 최종 적용 금리 표시 */}
+                      <div className="pt-2 border-t border-blue-200">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-blue-900">최종 적용 금리:</span>
+                          <span className="text-lg font-bold text-blue-600">
+                            {(welcomeBaseRate - welcomeDiscount).toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </>
                 )}
@@ -221,9 +257,43 @@ export default function LoanCalculator() {
                 {(selectedBank === 'jeonbuk' || selectedBank === 'compare') && (
                   <>
                     <Separator />
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="lguplus">전북: LG U+ 유심 우대 (-0.5%)</Label>
-                      <Switch id="lguplus" checked={lgUplus} onCheckedChange={setLgUplus} />
+                    <div className="space-y-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                      <Label className="text-green-900 font-semibold">💚 전북은행 옵션</Label>
+
+                      {/* 기본 금리 입력 */}
+                      <div className="space-y-2">
+                        <Label className="text-sm">기본 금리 (%)</Label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          min="1"
+                          max="30"
+                          value={jeonbukBaseRate}
+                          onChange={(e) => setJeonbukBaseRate(Number(e.target.value))}
+                          className="h-10 bg-white"
+                        />
+                        <p className="text-xs text-green-600">
+                          평균 13-15% (직접 입력 가능)
+                        </p>
+                      </div>
+
+                      {/* LG U+ 우대 */}
+                      <div className="flex items-center justify-between p-2 bg-white rounded border border-green-100">
+                        <Label htmlFor="lguplus" className="text-sm cursor-pointer">
+                          LG U+ 유심 우대 (-0.5%)
+                        </Label>
+                        <Switch id="lguplus" checked={lgUplus} onCheckedChange={setLgUplus} />
+                      </div>
+
+                      {/* 최종 적용 금리 표시 */}
+                      <div className="pt-2 border-t border-green-200">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-green-900">최종 적용 금리:</span>
+                          <span className="text-lg font-bold text-green-600">
+                            {(jeonbukBaseRate + (lgUplus ? -0.5 : 0)).toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </>
                 )}
