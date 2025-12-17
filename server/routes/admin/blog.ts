@@ -1,23 +1,18 @@
 import { Router } from "express";
-import { eq, desc } from "drizzle-orm";
 import { db } from "../../storage/db.js";
-import { blogPosts, insertBlogPostSchema } from "../../../shared/schema.js";
-import { z } from "zod";
 
 const router = Router();
 
 // GET - Get all blog posts (admin)
 router.get("/", async (req, res) => {
   try {
-    const posts = await db
-      .select()
-      .from(blogPosts)
-      .orderBy(desc(blogPosts.created_at));
-
-    res.json(posts);
+    const result = await db.query(
+      'SELECT * FROM blog_posts ORDER BY created_at DESC'
+    );
+    res.json(result.rows);
   } catch (error) {
-    console.error("Blog fetch error:", error);
-    res.status(500).json({ error: "Failed to fetch posts" });
+    console.error('Blog fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch posts' });
   }
 });
 
@@ -27,55 +22,76 @@ router.get("/:identifier", async (req, res) => {
     const { identifier } = req.params;
 
     // Try to fetch by ID first, then by slug
-    let post = await db
-      .select()
-      .from(blogPosts)
-      .where(eq(blogPosts.id, identifier))
-      .limit(1);
+    let result = await db.query(
+      'SELECT * FROM blog_posts WHERE id = $1 LIMIT 1',
+      [identifier]
+    );
 
-    if (post.length === 0) {
-      post = await db
-        .select()
-        .from(blogPosts)
-        .where(eq(blogPosts.slug, identifier))
-        .limit(1);
+    if (result.rows.length === 0) {
+      result = await db.query(
+        'SELECT * FROM blog_posts WHERE slug = $1 LIMIT 1',
+        [identifier]
+      );
     }
 
-    if (post.length === 0) {
-      return res.status(404).json({ error: "Post not found" });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Post not found' });
     }
 
-    res.json(post[0]);
+    res.json(result.rows[0]);
   } catch (error) {
-    console.error("Blog fetch error:", error);
-    res.status(500).json({ error: "Failed to fetch post" });
+    console.error('Blog fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch post' });
   }
 });
 
 // POST - Create new blog post
 router.post("/", async (req, res) => {
   try {
-    const postData = insertBlogPostSchema.parse(req.body);
+    const {
+      title_ko,
+      title_en,
+      title_vi,
+      title_th,
+      content_ko,
+      content_en,
+      content_vi,
+      content_th,
+      excerpt_ko,
+      excerpt_en,
+      excerpt_vi,
+      excerpt_th,
+      slug,
+      category,
+      tags,
+      featured_image,
+      author,
+      is_published
+    } = req.body;
 
-    // Set published_at if is_published is true
-    const dataToInsert = {
-      ...postData,
-      published_at: postData.is_published ? new Date() : null,
-      tags: postData.tags || [],
-    };
+    const published_at = is_published ? new Date() : null;
 
-    const [newPost] = await db
-      .insert(blogPosts)
-      .values(dataToInsert)
-      .returning();
+    const result = await db.query(
+      `INSERT INTO blog_posts (
+        title_ko, title_en, title_vi, title_th,
+        content_ko, content_en, content_vi, content_th,
+        excerpt_ko, excerpt_en, excerpt_vi, excerpt_th,
+        slug, category, tags, featured_image, author, is_published, published_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+      RETURNING *`,
+      [
+        title_ko, title_en, title_vi, title_th,
+        content_ko, content_en, content_vi, content_th,
+        excerpt_ko, excerpt_en, excerpt_vi, excerpt_th,
+        slug, category, JSON.stringify(tags || []), featured_image,
+        author || 'Admin', is_published || false, published_at
+      ]
+    );
 
-    res.status(201).json(newPost);
+    res.status(201).json(result.rows[0]);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
-    }
-    console.error("Blog create error:", error);
-    res.status(500).json({ error: "Failed to create post" });
+    console.error('Blog create error:', error);
+    res.status(500).json({ error: 'Failed to create post' });
   }
 });
 
@@ -83,33 +99,56 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = insertBlogPostSchema.partial().parse(req.body);
+    const {
+      title_ko,
+      title_en,
+      title_vi,
+      title_th,
+      content_ko,
+      content_en,
+      content_vi,
+      content_th,
+      excerpt_ko,
+      excerpt_en,
+      excerpt_vi,
+      excerpt_th,
+      slug,
+      category,
+      tags,
+      featured_image,
+      is_published
+    } = req.body;
 
     // Set published_at if is_published is being set to true
-    if (updateData.is_published && !req.body.published_at) {
-      updateData.published_at = new Date();
+    const published_at = is_published && !req.body.published_at ? new Date() : undefined;
+
+    const result = await db.query(
+      `UPDATE blog_posts SET
+        title_ko = $1, title_en = $2, title_vi = $3, title_th = $4,
+        content_ko = $5, content_en = $6, content_vi = $7, content_th = $8,
+        excerpt_ko = $9, excerpt_en = $10, excerpt_vi = $11, excerpt_th = $12,
+        slug = $13, category = $14, tags = $15, featured_image = $16,
+        is_published = $17, published_at = COALESCE($18, published_at),
+        updated_at = NOW()
+      WHERE id = $19
+      RETURNING *`,
+      [
+        title_ko, title_en, title_vi, title_th,
+        content_ko, content_en, content_vi, content_th,
+        excerpt_ko, excerpt_en, excerpt_vi, excerpt_th,
+        slug, category, JSON.stringify(tags || []), featured_image,
+        is_published, published_at, id
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Post not found' });
     }
 
-    const [updatedPost] = await db
-      .update(blogPosts)
-      .set({
-        ...updateData,
-        updated_at: new Date(),
-      })
-      .where(eq(blogPosts.id, id))
-      .returning();
-
-    if (!updatedPost) {
-      return res.status(404).json({ error: "Post not found" });
-    }
-
-    res.json(updatedPost);
+    res.json(result.rows[0]);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
-    }
-    console.error("Blog update error:", error);
-    res.status(500).json({ error: "Failed to update post" });
+    console.error('Blog update error:', error);
+    res.status(500).json({ error: 'Failed to update post' });
   }
 });
 
@@ -118,19 +157,19 @@ router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [deletedPost] = await db
-      .delete(blogPosts)
-      .where(eq(blogPosts.id, id))
-      .returning();
+    const result = await db.query(
+      'DELETE FROM blog_posts WHERE id = $1 RETURNING *',
+      [id]
+    );
 
-    if (!deletedPost) {
-      return res.status(404).json({ error: "Post not found" });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Post not found' });
     }
 
     res.json({ success: true });
   } catch (error) {
-    console.error("Blog delete error:", error);
-    res.status(500).json({ error: "Failed to delete post" });
+    console.error('Blog delete error:', error);
+    res.status(500).json({ error: 'Failed to delete post' });
   }
 });
 
