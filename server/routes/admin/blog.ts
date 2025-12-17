@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { eq, desc } from "drizzle-orm";
-import { db } from "../../storage/db";
-import { blogPosts, insertBlogPostSchema } from "../../../shared/schema";
+import { db } from "../../storage/db.js";
+import { blogPosts, insertBlogPostSchema } from "../../../shared/schema.js";
 import { z } from "zod";
 
 const router = Router();
