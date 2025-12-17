@@ -1,6 +1,5 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { OrganizationSchema, WebSiteSchema } from '@/components/StructuredData'
 
 export const metadata: Metadata = {
   title: {
@@ -8,7 +7,7 @@ export const metadata: Metadata = {
     template: '%s | 한국 유심 요금제 비교'
   },
   description: '한국 통신사 유심 요금제를 쉽고 빠르게 비교하세요. SKT, KT, LG U+, MVNO 등 다양한 요금제를 한눈에!',
-  keywords: ['한국 유심', '유심 요금제', '통신사 비교', 'SKT', 'KT', 'LG U+', 'MVNO', '선불 유심', '데이터 요금제', 'Korea USIM', 'Korea SIM card', 'prepaid SIM', 'mobile plans'],
+  keywords: ['한국 유심', '유심 요금제', '통신사 비교', 'SKT', 'KT', 'LG U+', 'MVNO', '선불 유심', '데이터 요금제'],
   authors: [{ name: 'Korea USIM Comparison' }],
   creator: 'Korea USIM Comparison',
   publisher: 'Korea USIM Comparison',
@@ -16,18 +15,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/',
     languages: {
-      'ko': '/ko',
-      'en': '/en',
-      'vi': '/vi',
-      'th': '/th',
-      'tl': '/tl',
-      'uz': '/uz',
-      'ne': '/ne',
-      'mn': '/mn',
-      'id': '/id',
-      'my': '/my',
-      'zh': '/zh',
-      'ru': '/ru',
+      'ko-KR': '/',
     },
   },
   openGraph: {
@@ -78,18 +66,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <head>
-        {/* Structured Data for SEO */}
-        <OrganizationSchema />
-        <WebSiteSchema />
-        
-        {/* Google AdSense */}
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3152894563346753"
-          crossOrigin="anonymous"
-        ></script>
-      </head>
       <body>{children}</body>
     </html>
   )
