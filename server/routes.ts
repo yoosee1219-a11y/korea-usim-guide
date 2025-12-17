@@ -7,6 +7,7 @@ import plansRouter from "./routes/plans.js";
 import tipsRouter from "./routes/tips.js";
 import sitemapRouter from "./routes/sitemap.js";
 import translateRouter from "./routes/translate.js";
+import adminBlogRouter from "./routes/admin/blog.js";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Sitemap 라우트 (인증 불필요, 먼저 등록하여 /api보다 우선)
@@ -18,6 +19,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/plans", plansRouter);
   app.use("/api/tips", tipsRouter);
   app.use("/api/translate", translateRouter);
+  app.use("/api/admin/blog", adminBlogRouter);
 
   // use storage to perform CRUD operations on the storage interface
   // e.g. storage.insertUser(user) or storage.getUserByUsername(username)

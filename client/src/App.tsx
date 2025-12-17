@@ -14,6 +14,9 @@ const Compare = lazy(() => import("@/pages/compare"));
 const PlanDetail = lazy(() => import("@/pages/plan-detail"));
 const Tips = lazy(() => import("@/pages/tips"));
 const TipDetail = lazy(() => import("@/pages/tip-detail"));
+const AdminBlogList = lazy(() => import("@/pages/admin/blog-list"));
+const AdminBlogNew = lazy(() => import("@/pages/admin/blog-new"));
+const AdminBlogEdit = lazy(() => import("@/pages/admin/blog-edit"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // 로딩 컴포넌트
@@ -34,6 +37,9 @@ function Router() {
         <Route path="/plans/:id" component={PlanDetail} />
         <Route path="/tips" component={Tips} />
         <Route path="/tips/:id" component={TipDetail} />
+        <Route path="/admin/blog" component={AdminBlogList} />
+        <Route path="/admin/blog/new" component={AdminBlogNew} />
+        <Route path="/admin/blog/edit/:id" component={AdminBlogEdit} />
         <Route component={NotFound} />
       </Switch>
     </Suspense>
