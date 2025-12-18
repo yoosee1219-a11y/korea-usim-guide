@@ -115,6 +115,9 @@ export default function AdminBlogList() {
             <Link href="/">
               <Button variant="outline">홈으로</Button>
             </Link>
+            <Link href="/admin/plans">
+              <Button variant="outline">요금제 관리</Button>
+            </Link>
             <Button onClick={handleLogout} variant="outline">
               로그아웃
             </Button>
