@@ -1,0 +1,15 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/admin/blog/page": "app/admin/blog/page.js",
+  "/admin/blog/new/page": "app/admin/blog/new/page.js",
+  "/admin/blog/edit/[id]/page": "app/admin/blog/edit/[id]/page.js",
+  "/blog/page": "app/blog/page.js",
+  "/api/plans/route": "app/api/plans/route.js",
+  "/api/blog/route": "app/api/blog/route.js",
+  "/api/carriers/route": "app/api/carriers/route.js",
+  "/robots.txt/route": "app/robots.txt/route.js",
+  "/sitemap.xml/route": "app/sitemap.xml/route.js",
+  "/blog/[slug]/page": "app/blog/[slug]/page.js",
+  "/page": "app/page.js",
+  "/api/admin/blog/route": "app/api/admin/blog/route.js"
+}

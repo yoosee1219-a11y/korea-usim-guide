@@ -1,11 +1,38 @@
 import { useState, useEffect } from 'react'
-import ReactQuill from 'react-quill'
-import 'react-quill/dist/quill.snow.css'
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Underline from '@tiptap/extension-underline'
+import Link from '@tiptap/extension-link'
+import Image from '@tiptap/extension-image'
+import TextAlign from '@tiptap/extension-text-align'
+import Highlight from '@tiptap/extension-highlight'
+import { Color } from '@tiptap/extension-color'
+import { TextStyle } from '@tiptap/extension-text-style'
 import slugify from 'slugify'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
+import {
+  Bold,
+  Italic,
+  Underline as UnderlineIcon,
+  Strikethrough,
+  Heading1,
+  Heading2,
+  Heading3,
+  List,
+  ListOrdered,
+  Quote,
+  Link as LinkIcon,
+  Image as ImageIcon,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Undo,
+  Redo
+} from 'lucide-react'
+import './BlogEditor.css'
 
 interface BlogEditorProps {
   initialData?: {
@@ -25,7 +52,6 @@ interface BlogEditorProps {
 
 export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditorProps) {
   const [title, setTitle] = useState(initialData?.title_ko || '')
-  const [content, setContent] = useState(initialData?.content_ko || '')
   const [excerpt, setExcerpt] = useState(initialData?.excerpt_ko || '')
   const [slug, setSlug] = useState(initialData?.slug || '')
   const [category, setCategory] = useState(initialData?.category || '')
@@ -35,6 +61,29 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
   const [isPublished, setIsPublished] = useState(initialData?.is_published || false)
   const [isSaving, setIsSaving] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Underline,
+      Link.configure({
+        openOnClick: false,
+      }),
+      Image,
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
+      Highlight,
+      TextStyle,
+      Color,
+    ],
+    content: initialData?.content_ko || '',
+    editorProps: {
+      attributes: {
+        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[400px] p-4',
+      },
+    },
+  })
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -48,28 +97,6 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
     }
   }, [title, initialData])
 
-  const modules = {
-    toolbar: [
-      [{ header: [1, 2, 3, 4, 5, 6, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ list: 'ordered' }, { list: 'bullet' }],
-      [{ indent: '-1' }, { indent: '+1' }],
-      ['link', 'image'],
-      [{ color: [] }, { background: [] }],
-      [{ align: [] }],
-      ['clean']
-    ]
-  }
-
-  const formats = [
-    'header',
-    'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet', 'indent',
-    'link', 'image',
-    'color', 'background',
-    'align'
-  ]
-
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
       setTags([...tags, tagInput.trim()])
@@ -81,11 +108,27 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
     setTags(tags.filter(tag => tag !== tagToRemove))
   }
 
+  const addLink = () => {
+    const url = window.prompt('URL을 입력하세요:')
+    if (url && editor) {
+      editor.chain().focus().setLink({ href: url }).run()
+    }
+  }
+
+  const addImage = () => {
+    const url = window.prompt('이미지 URL을 입력하세요:')
+    if (url && editor) {
+      editor.chain().focus().setImage({ src: url }).run()
+    }
+  }
+
   const handleSave = async (publish: boolean) => {
-    if (!title.trim() || !content.trim()) {
+    if (!title.trim() || !editor?.getHTML()) {
       alert('제목과 내용을 입력해주세요.')
       return
     }
+
+    const content = editor.getHTML()
 
     setIsSaving(true)
     try {
@@ -93,7 +136,7 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
         id: initialData?.id,
         title_ko: title,
         content_ko: content,
-        excerpt_ko: excerpt || content.replace(/<[^>]*>/g, '').substring(0, 200),
+        excerpt_ko: excerpt || editor.getText().substring(0, 200),
         slug: slug || slugify(title, { lower: true, strict: true }),
         category,
         tags,
@@ -106,6 +149,10 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
     } finally {
       setIsSaving(false)
     }
+  }
+
+  if (!editor) {
+    return <div className="flex items-center justify-center min-h-screen">로딩 중...</div>
   }
 
   return (
@@ -138,7 +185,7 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
             <img src={featuredImage} alt={title} className="w-full h-64 object-cover mb-4 rounded" />
           )}
           {excerpt && <p className="text-gray-600 mb-4">{excerpt}</p>}
-          <div dangerouslySetInnerHTML={{ __html: content }} />
+          <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: editor.getHTML() }} />
         </Card>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -169,15 +216,152 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
             </div>
 
             <div>
-              <Label htmlFor="content">본문 *</Label>
-              <ReactQuill
-                theme="snow"
-                value={content}
-                onChange={setContent}
-                modules={modules}
-                formats={formats}
-                className="h-96 mb-12"
-              />
+              <Label>본문 *</Label>
+
+              {/* Toolbar */}
+              <div className="border border-gray-300 rounded-t-md p-2 bg-gray-50 flex flex-wrap gap-1">
+                <button
+                  onClick={() => editor.chain().focus().toggleBold().run()}
+                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('bold') ? 'bg-gray-300' : ''}`}
+                  type="button"
+                >
+                  <Bold className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => editor.chain().focus().toggleItalic().run()}
+                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('italic') ? 'bg-gray-300' : ''}`}
+                  type="button"
+                >
+                  <Italic className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => editor.chain().focus().toggleUnderline().run()}
+                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('underline') ? 'bg-gray-300' : ''}`}
+                  type="button"
+                >
+                  <UnderlineIcon className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => editor.chain().focus().toggleStrike().run()}
+                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('strike') ? 'bg-gray-300' : ''}`}
+                  type="button"
+                >
+                  <Strikethrough className="w-4 h-4" />
+                </button>
+
+                <div className="w-px bg-gray-300 mx-1" />
+
+                <button
+                  onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('heading', { level: 1 }) ? 'bg-gray-300' : ''}`}
+                  type="button"
+                >
+                  <Heading1 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('heading', { level: 2 }) ? 'bg-gray-300' : ''}`}
+                  type="button"
+                >
+                  <Heading2 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('heading', { level: 3 }) ? 'bg-gray-300' : ''}`}
+                  type="button"
+                >
+                  <Heading3 className="w-4 h-4" />
+                </button>
+
+                <div className="w-px bg-gray-300 mx-1" />
+
+                <button
+                  onClick={() => editor.chain().focus().toggleBulletList().run()}
+                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('bulletList') ? 'bg-gray-300' : ''}`}
+                  type="button"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('orderedList') ? 'bg-gray-300' : ''}`}
+                  type="button"
+                >
+                  <ListOrdered className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('blockquote') ? 'bg-gray-300' : ''}`}
+                  type="button"
+                >
+                  <Quote className="w-4 h-4" />
+                </button>
+
+                <div className="w-px bg-gray-300 mx-1" />
+
+                <button
+                  onClick={() => editor.chain().focus().setTextAlign('left').run()}
+                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive({ textAlign: 'left' }) ? 'bg-gray-300' : ''}`}
+                  type="button"
+                >
+                  <AlignLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => editor.chain().focus().setTextAlign('center').run()}
+                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive({ textAlign: 'center' }) ? 'bg-gray-300' : ''}`}
+                  type="button"
+                >
+                  <AlignCenter className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => editor.chain().focus().setTextAlign('right').run()}
+                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive({ textAlign: 'right' }) ? 'bg-gray-300' : ''}`}
+                  type="button"
+                >
+                  <AlignRight className="w-4 h-4" />
+                </button>
+
+                <div className="w-px bg-gray-300 mx-1" />
+
+                <button
+                  onClick={addLink}
+                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('link') ? 'bg-gray-300' : ''}`}
+                  type="button"
+                >
+                  <LinkIcon className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={addImage}
+                  className="p-2 rounded hover:bg-gray-200"
+                  type="button"
+                >
+                  <ImageIcon className="w-4 h-4" />
+                </button>
+
+                <div className="w-px bg-gray-300 mx-1" />
+
+                <button
+                  onClick={() => editor.chain().focus().undo().run()}
+                  disabled={!editor.can().undo()}
+                  className="p-2 rounded hover:bg-gray-200 disabled:opacity-30"
+                  type="button"
+                >
+                  <Undo className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => editor.chain().focus().redo().run()}
+                  disabled={!editor.can().redo()}
+                  className="p-2 rounded hover:bg-gray-200 disabled:opacity-30"
+                  type="button"
+                >
+                  <Redo className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Editor */}
+              <div className="border border-gray-300 rounded-b-md">
+                <EditorContent editor={editor} />
+              </div>
             </div>
           </div>
 
