@@ -6,9 +6,13 @@ export default function NewPlan() {
 
   const handleSave = async (data: any) => {
     try {
+      const token = localStorage.getItem('adminToken')
       const response = await fetch('/api/admin/plans', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(data)
       })
 

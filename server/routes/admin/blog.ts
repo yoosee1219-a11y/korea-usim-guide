@@ -1,7 +1,11 @@
 import { Router } from "express";
 import { db } from "../../storage/db.js";
+import { requireAdminAuth } from "../../middleware/adminAuth.js";
 
 const router = Router();
+
+// 모든 라우트에 관리자 인증 미들웨어 적용
+router.use(requireAdminAuth);
 
 // GET - Get all blog posts (admin)
 router.get("/", async (req, res) => {

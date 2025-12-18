@@ -21,9 +21,9 @@ export default function AdminBlogList() {
   const [password, setPassword] = useState('')
 
   useEffect(() => {
-    // Check if admin is authenticated
-    const isAuth = localStorage.getItem('adminAuthenticated') === 'true'
-    if (isAuth) {
+    // Check if admin token exists
+    const token = localStorage.getItem('adminToken')
+    if (token) {
       setIsAuthenticated(true)
       fetchPosts()
     } else {
@@ -31,21 +31,46 @@ export default function AdminBlogList() {
     }
   }, [])
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Simple password check
-    if (password === 'admin123') { // TODO: Use environment variable
-      localStorage.setItem('adminAuthenticated', 'true')
-      setIsAuthenticated(true)
-      fetchPosts()
-    } else {
-      alert('잘못된 비밀번호입니다.')
+
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        localStorage.setItem('adminToken', data.token)
+        setIsAuthenticated(true)
+        fetchPosts()
+      } else {
+        alert('잘못된 비밀번호입니다.')
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      alert('로그인 중 오류가 발생했습니다.')
     }
   }
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch('/api/admin/blog')
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch('/api/admin/blog', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.status === 401) {
+        // Token expired or invalid
+        localStorage.removeItem('adminToken')
+        setIsAuthenticated(false)
+        return
+      }
+
       const data = await response.json()
       setPosts(data)
     } catch (error) {
@@ -59,8 +84,12 @@ export default function AdminBlogList() {
     if (!confirm('정말 삭제하시겠습니까?')) return
 
     try {
+      const token = localStorage.getItem('adminToken')
       const response = await fetch(`/api/admin/blog/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       })
 
       if (response.ok) {
@@ -75,7 +104,7 @@ export default function AdminBlogList() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('adminAuthenticated')
+    localStorage.removeItem('adminToken')
     setIsAuthenticated(false)
     navigate('/')
   }

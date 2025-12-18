@@ -11,28 +11,53 @@ export default function AdminPlanList() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const auth = localStorage.getItem('adminAuthenticated')
-    if (auth === 'true') {
+    const token = localStorage.getItem('adminToken')
+    if (token) {
       setIsAuthenticated(true)
       fetchPlans()
     }
   }, [])
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (password === 'admin123') {
-      localStorage.setItem('adminAuthenticated', 'true')
-      setIsAuthenticated(true)
-      fetchPlans()
-    } else {
-      alert('비밀번호가 올바르지 않습니다.')
+
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        localStorage.setItem('adminToken', data.token)
+        setIsAuthenticated(true)
+        fetchPlans()
+      } else {
+        alert('비밀번호가 올바르지 않습니다.')
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      alert('로그인 중 오류가 발생했습니다.')
     }
   }
 
   const fetchPlans = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/admin/plans')
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch('/api/admin/plans', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.status === 401) {
+        localStorage.removeItem('adminToken')
+        setIsAuthenticated(false)
+        return
+      }
+
       const data = await response.json()
       setPlans(data)
     } catch (error) {
@@ -48,8 +73,12 @@ export default function AdminPlanList() {
     }
 
     try {
+      const token = localStorage.getItem('adminToken')
       const response = await fetch(`/api/admin/plans/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       })
 
       if (response.ok) {
@@ -65,7 +94,7 @@ export default function AdminPlanList() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('adminAuthenticated')
+    localStorage.removeItem('adminToken')
     setIsAuthenticated(false)
     setPlans([])
   }

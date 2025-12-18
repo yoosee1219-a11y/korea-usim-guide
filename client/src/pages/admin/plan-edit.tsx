@@ -16,7 +16,12 @@ export default function EditPlan() {
 
   const fetchPlan = async (id: string) => {
     try {
-      const response = await fetch(`/api/admin/plans/${id}`)
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch(`/api/admin/plans/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
       const data = await response.json()
       setPlanData(data)
     } catch (error) {
@@ -28,9 +33,13 @@ export default function EditPlan() {
 
   const handleSave = async (data: any) => {
     try {
+      const token = localStorage.getItem('adminToken')
       const response = await fetch(`/api/admin/plans/${params?.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(data)
       })
 

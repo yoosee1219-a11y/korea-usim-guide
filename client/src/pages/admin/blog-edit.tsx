@@ -16,7 +16,12 @@ export default function EditBlogPost() {
 
   const fetchPost = async (id: string) => {
     try {
-      const response = await fetch(`/api/admin/blog/${id}`)
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch(`/api/admin/blog/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
       const data = await response.json()
       setPostData(data)
     } catch (error) {
@@ -28,9 +33,13 @@ export default function EditBlogPost() {
 
   const handleSave = async (data: any) => {
     try {
+      const token = localStorage.getItem('adminToken')
       const response = await fetch(`/api/admin/blog/${params?.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(data)
       })
 
