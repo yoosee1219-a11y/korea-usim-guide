@@ -68,6 +68,12 @@ export default function PlanEditor({ initialData, onSave, onCancel }: PlanEditor
   const [isActive, setIsActive] = useState(initialData?.is_active !== undefined ? initialData.is_active : true)
 
   const [isSaving, setIsSaving] = useState(false)
+  const [isTranslating, setIsTranslating] = useState(false)
+  const [translationProgress, setTranslationProgress] = useState<{
+    description: boolean
+    features: number
+    totalFeatures: number
+  }>({ description: false, features: 0, totalFeatures: 0 })
 
   // Fetch carriers
   useEffect(() => {
@@ -105,6 +111,92 @@ export default function PlanEditor({ initialData, onSave, onCancel }: PlanEditor
     const setFeatureLists = { ko: setFeatures, en: setFeaturesEn, vi: setFeaturesVi, th: setFeaturesTh }
 
     setFeatureLists[lang](featureLists[lang].filter(f => f !== featureToRemove))
+  }
+
+  const handleAutoTranslate = async () => {
+    if (!description.trim()) {
+      alert('한국어 설명을 먼저 작성해주세요.')
+      return
+    }
+
+    setIsTranslating(true)
+    setTranslationProgress({ description: false, features: 0, totalFeatures: features.length })
+
+    try {
+      const token = localStorage.getItem('adminToken')
+
+      // 병렬 처리: 설명과 모든 특징을 동시에 번역
+      const translationPromises = [
+        // Translate description
+        fetch('/api/translate-text', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ text: description, sourceLanguage: 'ko' })
+        }).then(res => res.json()).then(data => {
+          setTranslationProgress(prev => ({ ...prev, description: true }))
+          return { type: 'description', data }
+        })
+      ]
+
+      // Add feature translations to promises
+      features.forEach((feature, index) => {
+        translationPromises.push(
+          fetch('/api/translate-text', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ text: feature, sourceLanguage: 'ko' })
+          }).then(res => res.json()).then(data => {
+            setTranslationProgress(prev => ({ ...prev, features: prev.features + 1 }))
+            return { type: 'feature', index, data }
+          })
+        )
+      })
+
+      // 모든 번역을 병렬로 실행
+      const results = await Promise.all(translationPromises)
+
+      // Process description translation
+      const descResult = results.find(r => r.type === 'description')
+      if (descResult && descResult.data.translations) {
+        setDescriptionEn(descResult.data.translations.en || '')
+        setDescriptionVi(descResult.data.translations.vi || '')
+        setDescriptionTh(descResult.data.translations.th || '')
+      }
+
+      // Process feature translations
+      const featureResults = results.filter(r => r.type === 'feature')
+      const translatedFeatures = {
+        en: [] as string[],
+        vi: [] as string[],
+        th: [] as string[]
+      }
+
+      featureResults.forEach(result => {
+        if (result.data.translations) {
+          translatedFeatures.en.push(result.data.translations.en || features[result.index])
+          translatedFeatures.vi.push(result.data.translations.vi || features[result.index])
+          translatedFeatures.th.push(result.data.translations.th || features[result.index])
+        }
+      })
+
+      setFeaturesEn(translatedFeatures.en)
+      setFeaturesVi(translatedFeatures.vi)
+      setFeaturesTh(translatedFeatures.th)
+
+      alert('번역이 완료되었습니다!')
+    } catch (error) {
+      console.error('Translation error:', error)
+      alert('번역 중 오류가 발생했습니다.')
+    } finally {
+      setIsTranslating(false)
+      setTranslationProgress({ description: false, features: 0, totalFeatures: 0 })
+    }
   }
 
   const handleSave = async () => {
@@ -156,6 +248,14 @@ export default function PlanEditor({ initialData, onSave, onCancel }: PlanEditor
           {initialData?.id ? '요금제 수정' : '새 요금제 추가'}
         </h1>
         <div className="flex gap-2">
+          <Button
+            onClick={handleAutoTranslate}
+            disabled={isTranslating || !description.trim()}
+            variant="outline"
+            className="bg-blue-50 hover:bg-blue-100"
+          >
+            {isTranslating ? '번역 중...' : '🌐 자동 번역'}
+          </Button>
           <Button onClick={onCancel} variant="outline">
             취소
           </Button>
@@ -164,6 +264,26 @@ export default function PlanEditor({ initialData, onSave, onCancel }: PlanEditor
           </Button>
         </div>
       </div>
+
+      {/* Translation Progress Indicator */}
+      {isTranslating && (
+        <Card className="p-4 bg-blue-50 border-blue-200">
+          <div className="flex items-center gap-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+            <div className="flex-1">
+              <p className="font-medium text-blue-900">번역 진행 중...</p>
+              <div className="flex gap-4 mt-2 text-sm">
+                <span className={translationProgress.description ? 'text-green-600' : 'text-gray-500'}>
+                  {translationProgress.description ? '✓' : '⏳'} 설명
+                </span>
+                <span className={translationProgress.features === translationProgress.totalFeatures && translationProgress.totalFeatures > 0 ? 'text-green-600' : 'text-gray-500'}>
+                  {translationProgress.features === translationProgress.totalFeatures && translationProgress.totalFeatures > 0 ? '✓' : '⏳'} 특징 ({translationProgress.features}/{translationProgress.totalFeatures})
+                </span>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}

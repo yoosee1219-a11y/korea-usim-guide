@@ -7,6 +7,7 @@ import plansRouter from "./routes/plans.js";
 import tipsRouter from "./routes/tips.js";
 import sitemapRouter from "./routes/sitemap.js";
 import translateRouter from "./routes/translate.js";
+import translateTextRouter from "./routes/translate-text.js";
 import adminLoginRouter from "./routes/admin/login.js";
 import adminBlogRouter from "./routes/admin/blog.js";
 import adminPlansRouter from "./routes/admin/plans.js";
@@ -21,6 +22,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/plans", plansRouter);
   app.use("/api/tips", tipsRouter);
   app.use("/api/translate", translateRouter);
+  app.use("/api/translate-text", translateTextRouter);
   app.use("/api/admin/login", adminLoginRouter);
   app.use("/api/admin/blog", adminBlogRouter);
   app.use("/api/admin/plans", adminPlansRouter);

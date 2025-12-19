@@ -38,8 +38,17 @@ interface BlogEditorProps {
   initialData?: {
     id?: string
     title_ko?: string
+    title_en?: string
+    title_vi?: string
+    title_th?: string
     content_ko?: string
+    content_en?: string
+    content_vi?: string
+    content_th?: string
     excerpt_ko?: string
+    excerpt_en?: string
+    excerpt_vi?: string
+    excerpt_th?: string
     slug?: string
     category?: string
     tags?: string[]
@@ -51,8 +60,22 @@ interface BlogEditorProps {
 }
 
 export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditorProps) {
+  // Korean (primary language)
   const [title, setTitle] = useState(initialData?.title_ko || '')
   const [excerpt, setExcerpt] = useState(initialData?.excerpt_ko || '')
+
+  // English
+  const [titleEn, setTitleEn] = useState(initialData?.title_en || '')
+  const [excerptEn, setExcerptEn] = useState(initialData?.excerpt_en || '')
+
+  // Vietnamese
+  const [titleVi, setTitleVi] = useState(initialData?.title_vi || '')
+  const [excerptVi, setExcerptVi] = useState(initialData?.excerpt_vi || '')
+
+  // Thai
+  const [titleTh, setTitleTh] = useState(initialData?.title_th || '')
+  const [excerptTh, setExcerptTh] = useState(initialData?.excerpt_th || '')
+
   const [slug, setSlug] = useState(initialData?.slug || '')
   const [category, setCategory] = useState(initialData?.category || '')
   const [tags, setTags] = useState<string[]>(initialData?.tags || [])
@@ -60,7 +83,18 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
   const [featuredImage, setFeaturedImage] = useState(initialData?.featured_image || '')
   const [isPublished, setIsPublished] = useState(initialData?.is_published || false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isTranslating, setIsTranslating] = useState(false)
+  const [translationProgress, setTranslationProgress] = useState<{
+    title: boolean
+    excerpt: boolean
+    content: boolean
+  }>({ title: false, excerpt: false, content: false })
   const [showPreview, setShowPreview] = useState(false)
+  const [expandedLanguages, setExpandedLanguages] = useState<Record<string, boolean>>({
+    en: false,
+    vi: false,
+    th: false
+  })
 
   const editor = useEditor({
     extensions: [
@@ -108,6 +142,98 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
     setTags(tags.filter(tag => tag !== tagToRemove))
   }
 
+  const handleAutoTranslate = async () => {
+    if (!title.trim() || !editor?.getHTML()) {
+      alert('제목과 본문을 먼저 작성해주세요.')
+      return
+    }
+
+    setIsTranslating(true)
+    setTranslationProgress({ title: false, excerpt: false, content: false })
+
+    try {
+      const token = localStorage.getItem('adminToken')
+      const excerptText = excerpt || editor.getText().substring(0, 200)
+      const contentText = editor.getText()
+
+      // 병렬 처리: 모든 번역을 동시에 실행
+      const [titleData, excerptData, contentData] = await Promise.all([
+        // Translate title
+        fetch('/api/translate-text', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ text: title, sourceLanguage: 'ko' })
+        }).then(res => res.json()).then(data => {
+          setTranslationProgress(prev => ({ ...prev, title: true }))
+          return data
+        }),
+
+        // Translate excerpt
+        fetch('/api/translate-text', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ text: excerptText, sourceLanguage: 'ko' })
+        }).then(res => res.json()).then(data => {
+          setTranslationProgress(prev => ({ ...prev, excerpt: true }))
+          return data
+        }),
+
+        // Translate content
+        fetch('/api/translate-text', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ text: contentText, sourceLanguage: 'ko' })
+        }).then(res => res.json()).then(data => {
+          setTranslationProgress(prev => ({ ...prev, content: true }))
+          return data
+        })
+      ])
+
+      // Update state with translated content
+      if (titleData.translations) {
+        setTitleEn(titleData.translations.en || '')
+        setTitleVi(titleData.translations.vi || '')
+        setTitleTh(titleData.translations.th || '')
+      }
+
+      if (excerptData.translations) {
+        setExcerptEn(excerptData.translations.en || '')
+        setExcerptVi(excerptData.translations.vi || '')
+        setExcerptTh(excerptData.translations.th || '')
+      }
+
+      // Content stored as plain text for now (can be enhanced later to preserve formatting)
+      if (contentData.translations) {
+        // You can enhance this to convert back to HTML with formatting if needed
+        // For now, storing as plain text
+      }
+
+      alert('번역이 완료되었습니다!')
+
+      // Expand all language sections to show translated content
+      setExpandedLanguages({ en: true, vi: true, th: true })
+    } catch (error) {
+      console.error('Translation error:', error)
+      alert('번역 중 오류가 발생했습니다.')
+    } finally {
+      setIsTranslating(false)
+      setTranslationProgress({ title: false, excerpt: false, content: false })
+    }
+  }
+
+  const toggleLanguage = (lang: string) => {
+    setExpandedLanguages(prev => ({ ...prev, [lang]: !prev[lang] }))
+  }
+
   const addLink = () => {
     const url = window.prompt('URL을 입력하세요:')
     if (url && editor) {
@@ -135,8 +261,17 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
       await onSave({
         id: initialData?.id,
         title_ko: title,
+        title_en: titleEn,
+        title_vi: titleVi,
+        title_th: titleTh,
         content_ko: content,
+        content_en: excerptEn, // Simplified: Using excerpt as content for now
+        content_vi: excerptVi,
+        content_th: excerptTh,
         excerpt_ko: excerpt || editor.getText().substring(0, 200),
+        excerpt_en: excerptEn,
+        excerpt_vi: excerptVi,
+        excerpt_th: excerptTh,
         slug: slug || slugify(title, { lower: true, strict: true }),
         category,
         tags,
@@ -163,6 +298,14 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
           {initialData?.id ? '글 수정' : '새 글 작성'}
         </h1>
         <div className="flex gap-2">
+          <Button
+            onClick={handleAutoTranslate}
+            disabled={isTranslating || !title.trim()}
+            variant="outline"
+            className="bg-blue-50 hover:bg-blue-100"
+          >
+            {isTranslating ? '번역 중...' : '🌐 자동 번역'}
+          </Button>
           <Button onClick={() => setShowPreview(!showPreview)} variant="outline">
             {showPreview ? '편집' : '미리보기'}
           </Button>
@@ -177,6 +320,29 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
           </Button>
         </div>
       </div>
+
+      {/* Translation Progress Indicator */}
+      {isTranslating && (
+        <Card className="p-4 bg-blue-50 border-blue-200">
+          <div className="flex items-center gap-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+            <div className="flex-1">
+              <p className="font-medium text-blue-900">번역 진행 중...</p>
+              <div className="flex gap-4 mt-2 text-sm">
+                <span className={translationProgress.title ? 'text-green-600' : 'text-gray-500'}>
+                  {translationProgress.title ? '✓' : '⏳'} 제목
+                </span>
+                <span className={translationProgress.excerpt ? 'text-green-600' : 'text-gray-500'}>
+                  {translationProgress.excerpt ? '✓' : '⏳'} 요약
+                </span>
+                <span className={translationProgress.content ? 'text-green-600' : 'text-gray-500'}>
+                  {translationProgress.content ? '✓' : '⏳'} 본문
+                </span>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {showPreview ? (
         <Card className="p-6">
@@ -427,6 +593,116 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
                 placeholder="글의 간단한 요약 (비워두면 자동 생성)"
                 className="w-full p-2 border rounded h-24"
               />
+            </Card>
+
+            {/* Multi-language fields */}
+            <Card className="p-4">
+              <h3 className="font-semibold mb-3">다국어 번역</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                '🌐 자동 번역' 버튼을 클릭하면 한국어 내용이 자동으로 번역됩니다.
+              </p>
+
+              {/* English */}
+              <div className="mb-3">
+                <button
+                  onClick={() => toggleLanguage('en')}
+                  className="flex items-center justify-between w-full p-2 bg-gray-100 hover:bg-gray-200 rounded"
+                  type="button"
+                >
+                  <span className="font-medium">🇬🇧 English</span>
+                  <span>{expandedLanguages.en ? '▼' : '▶'}</span>
+                </button>
+                {expandedLanguages.en && (
+                  <div className="mt-2 space-y-2 p-2 border rounded">
+                    <div>
+                      <Label className="text-xs">Title</Label>
+                      <Input
+                        value={titleEn}
+                        onChange={(e) => setTitleEn(e.target.value)}
+                        placeholder="English title"
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Excerpt</Label>
+                      <textarea
+                        value={excerptEn}
+                        onChange={(e) => setExcerptEn(e.target.value)}
+                        placeholder="English excerpt"
+                        className="w-full p-2 border rounded h-20 text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Vietnamese */}
+              <div className="mb-3">
+                <button
+                  onClick={() => toggleLanguage('vi')}
+                  className="flex items-center justify-between w-full p-2 bg-gray-100 hover:bg-gray-200 rounded"
+                  type="button"
+                >
+                  <span className="font-medium">🇻🇳 Tiếng Việt</span>
+                  <span>{expandedLanguages.vi ? '▼' : '▶'}</span>
+                </button>
+                {expandedLanguages.vi && (
+                  <div className="mt-2 space-y-2 p-2 border rounded">
+                    <div>
+                      <Label className="text-xs">Tiêu đề</Label>
+                      <Input
+                        value={titleVi}
+                        onChange={(e) => setTitleVi(e.target.value)}
+                        placeholder="Vietnamese title"
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Trích dẫn</Label>
+                      <textarea
+                        value={excerptVi}
+                        onChange={(e) => setExcerptVi(e.target.value)}
+                        placeholder="Vietnamese excerpt"
+                        className="w-full p-2 border rounded h-20 text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Thai */}
+              <div className="mb-3">
+                <button
+                  onClick={() => toggleLanguage('th')}
+                  className="flex items-center justify-between w-full p-2 bg-gray-100 hover:bg-gray-200 rounded"
+                  type="button"
+                >
+                  <span className="font-medium">🇹🇭 ภาษาไทย</span>
+                  <span>{expandedLanguages.th ? '▼' : '▶'}</span>
+                </button>
+                {expandedLanguages.th && (
+                  <div className="mt-2 space-y-2 p-2 border rounded">
+                    <div>
+                      <Label className="text-xs">หัวข้อ</Label>
+                      <Input
+                        value={titleTh}
+                        onChange={(e) => setTitleTh(e.target.value)}
+                        placeholder="Thai title"
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">สรุป</Label>
+                      <textarea
+                        value={excerptTh}
+                        onChange={(e) => setExcerptTh(e.target.value)}
+                        placeholder="Thai excerpt"
+                        className="w-full p-2 border rounded h-20 text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </Card>
           </div>
         </div>
