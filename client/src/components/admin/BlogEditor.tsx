@@ -90,6 +90,7 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
 
   const [slug, setSlug] = useState(initialData?.slug || '')
   const [category, setCategory] = useState(initialData?.category || '')
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([])
   const [tags, setTags] = useState<string[]>(initialData?.tags || [])
   const [tagInput, setTagInput] = useState('')
   const [featuredImage, setFeaturedImage] = useState(initialData?.featured_image || '')
@@ -130,6 +131,29 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
       },
     },
   })
+
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const token = localStorage.getItem('adminToken')
+        const response = await fetch('/api/tips/categories', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        const data = await response.json()
+        if (data.categories) {
+          setCategories(data.categories)
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories:', error)
+      }
+    }
+    fetchCategories()
+  }, [])
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -593,11 +617,11 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
                 className="w-full p-2 border rounded"
               >
                 <option value="">선택하세요</option>
-                <option value="가이드">가이드</option>
-                <option value="비교">비교</option>
-                <option value="뉴스">뉴스</option>
-                <option value="팁">팁</option>
-                <option value="리뷰">리뷰</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
               </select>
             </Card>
 
