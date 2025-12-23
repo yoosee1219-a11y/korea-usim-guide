@@ -64,17 +64,29 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
   const [title, setTitle] = useState(initialData?.title_ko || '')
   const [excerpt, setExcerpt] = useState(initialData?.excerpt_ko || '')
 
-  // English
+  // All 11 languages (storing all even if UI only shows 3)
   const [titleEn, setTitleEn] = useState(initialData?.title_en || '')
   const [excerptEn, setExcerptEn] = useState(initialData?.excerpt_en || '')
-
-  // Vietnamese
   const [titleVi, setTitleVi] = useState(initialData?.title_vi || '')
   const [excerptVi, setExcerptVi] = useState(initialData?.excerpt_vi || '')
-
-  // Thai
   const [titleTh, setTitleTh] = useState(initialData?.title_th || '')
   const [excerptTh, setExcerptTh] = useState(initialData?.excerpt_th || '')
+  const [titleTl, setTitleTl] = useState(initialData?.title_tl || '')
+  const [excerptTl, setExcerptTl] = useState(initialData?.excerpt_tl || '')
+  const [titleUz, setTitleUz] = useState(initialData?.title_uz || '')
+  const [excerptUz, setExcerptUz] = useState(initialData?.excerpt_uz || '')
+  const [titleNe, setTitleNe] = useState(initialData?.title_ne || '')
+  const [excerptNe, setExcerptNe] = useState(initialData?.excerpt_ne || '')
+  const [titleMn, setTitleMn] = useState(initialData?.title_mn || '')
+  const [excerptMn, setExcerptMn] = useState(initialData?.excerpt_mn || '')
+  const [titleId, setTitleId] = useState(initialData?.title_id || '')
+  const [excerptId, setExcerptId] = useState(initialData?.excerpt_id || '')
+  const [titleMy, setTitleMy] = useState(initialData?.title_my || '')
+  const [excerptMy, setExcerptMy] = useState(initialData?.excerpt_my || '')
+  const [titleZh, setTitleZh] = useState(initialData?.title_zh || '')
+  const [excerptZh, setExcerptZh] = useState(initialData?.excerpt_zh || '')
+  const [titleRu, setTitleRu] = useState(initialData?.title_ru || '')
+  const [excerptRu, setExcerptRu] = useState(initialData?.excerpt_ru || '')
 
   const [slug, setSlug] = useState(initialData?.slug || '')
   const [category, setCategory] = useState(initialData?.category || '')
@@ -198,17 +210,33 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
         })
       ])
 
-      // Update state with translated content
+      // Update state with translated content (all 11 languages)
       if (titleData.translations) {
         setTitleEn(titleData.translations.en || '')
         setTitleVi(titleData.translations.vi || '')
         setTitleTh(titleData.translations.th || '')
+        setTitleTl(titleData.translations.tl || '')
+        setTitleUz(titleData.translations.uz || '')
+        setTitleNe(titleData.translations.ne || '')
+        setTitleMn(titleData.translations.mn || '')
+        setTitleId(titleData.translations.id || '')
+        setTitleMy(titleData.translations.my || '')
+        setTitleZh(titleData.translations['zh-CN'] || titleData.translations.zh || '')
+        setTitleRu(titleData.translations.ru || '')
       }
 
       if (excerptData.translations) {
         setExcerptEn(excerptData.translations.en || '')
         setExcerptVi(excerptData.translations.vi || '')
         setExcerptTh(excerptData.translations.th || '')
+        setExcerptTl(excerptData.translations.tl || '')
+        setExcerptUz(excerptData.translations.uz || '')
+        setExcerptNe(excerptData.translations.ne || '')
+        setExcerptMn(excerptData.translations.mn || '')
+        setExcerptId(excerptData.translations.id || '')
+        setExcerptMy(excerptData.translations.my || '')
+        setExcerptZh(excerptData.translations['zh-CN'] || excerptData.translations.zh || '')
+        setExcerptRu(excerptData.translations.ru || '')
       }
 
       // Content stored as plain text for now (can be enhanced later to preserve formatting)
@@ -264,14 +292,38 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
         title_en: titleEn,
         title_vi: titleVi,
         title_th: titleTh,
+        title_tl: titleTl,
+        title_uz: titleUz,
+        title_ne: titleNe,
+        title_mn: titleMn,
+        title_id: titleId,
+        title_my: titleMy,
+        title_zh: titleZh,
+        title_ru: titleRu,
         content_ko: content,
         content_en: excerptEn, // Simplified: Using excerpt as content for now
         content_vi: excerptVi,
         content_th: excerptTh,
+        content_tl: excerptTl,
+        content_uz: excerptUz,
+        content_ne: excerptNe,
+        content_mn: excerptMn,
+        content_id: excerptId,
+        content_my: excerptMy,
+        content_zh: excerptZh,
+        content_ru: excerptRu,
         excerpt_ko: excerpt || editor.getText().substring(0, 200),
         excerpt_en: excerptEn,
         excerpt_vi: excerptVi,
         excerpt_th: excerptTh,
+        excerpt_tl: excerptTl,
+        excerpt_uz: excerptUz,
+        excerpt_ne: excerptNe,
+        excerpt_mn: excerptMn,
+        excerpt_id: excerptId,
+        excerpt_my: excerptMy,
+        excerpt_zh: excerptZh,
+        excerpt_ru: excerptRu,
         slug: slug || slugify(title, { lower: true, strict: true }),
         category,
         tags,
