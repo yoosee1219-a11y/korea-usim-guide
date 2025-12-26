@@ -1,43 +1,46 @@
-import pg from 'pg';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import dotenv from 'dotenv';
+import { config } from 'dotenv';
+import { readFileSync } from 'fs';
+import { Client } from 'pg';
 
-// Load environment variables
-dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const { Pool } = pg;
+// .env 파일 로드
+config();
 
 async function runMigration(migrationFile: string) {
-  const pool = new Pool({
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL environment variable is required');
+  }
+
+  const client = new Client({
     connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
   });
 
   try {
-    console.log(`🔄 Running migration: ${migrationFile}...`);
+    await client.connect();
+    console.log('✅ Connected to database');
 
-    const migrationPath = path.join(__dirname, '..', 'migrations', migrationFile);
-    const sql = fs.readFileSync(migrationPath, 'utf-8');
+    const sql = readFileSync(migrationFile, 'utf-8');
+    console.log(`📄 Running migration: ${migrationFile}`);
 
-    await pool.query(sql);
+    await client.query(sql);
+    console.log('✅ Migration completed successfully');
 
-    console.log(`✅ Migration ${migrationFile} completed successfully!`);
   } catch (error) {
-    console.error(`❌ Error running migration ${migrationFile}:`, error);
+    console.error('❌ Migration failed:', error);
     throw error;
   } finally {
-    await pool.end();
+    await client.end();
   }
 }
 
-// Get migration file from command line argument or use default
-const migrationFile = process.argv[2] || '004_add_multilingual_content.sql';
+// 명령줄 인자로 마이그레이션 파일 받기
+const migrationFile = process.argv[2];
 
-runMigration(migrationFile).catch((error) => {
-  console.error('Migration failed:', error);
+if (!migrationFile) {
+  console.error('Usage: npx tsx scripts/run-migration.ts <migration-file>');
   process.exit(1);
-});
+}
+
+runMigration(migrationFile)
+  .then(() => process.exit(0))
+  .catch(() => process.exit(1));

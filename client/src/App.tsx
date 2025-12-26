@@ -20,6 +20,9 @@ const AdminBlogEdit = lazy(() => import("@/pages/admin/blog-edit"));
 const AdminPlanList = lazy(() => import("@/pages/admin/plan-list"));
 const AdminPlanNew = lazy(() => import("@/pages/admin/plan-new"));
 const AdminPlanEdit = lazy(() => import("@/pages/admin/plan-edit"));
+const AdminTipsGrouped = lazy(() => import("@/pages/admin/tips-grouped-list"));
+const AdminKeywordList = lazy(() => import("@/pages/admin/keyword-list"));
+const AdminContentAutomation = lazy(() => import("@/pages/admin/content-automation"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // 로딩 컴포넌트
@@ -46,6 +49,9 @@ function Router() {
         <Route path="/admin/plans" component={AdminPlanList} />
         <Route path="/admin/plans/new" component={AdminPlanNew} />
         <Route path="/admin/plans/edit/:id" component={AdminPlanEdit} />
+        <Route path="/admin/tips-grouped" component={AdminTipsGrouped} />
+        <Route path="/admin/keywords" component={AdminKeywordList} />
+        <Route path="/admin/content-automation" component={AdminContentAutomation} />
         <Route component={NotFound} />
       </Switch>
     </Suspense>

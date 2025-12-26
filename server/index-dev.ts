@@ -11,8 +11,6 @@ import { createServer as createViteServer, createLogger } from "vite";
 
 import runApp from "./app";
 
-import viteConfig from "../vite.config";
-
 const viteLogger = createLogger();
 
 export async function setupVite(app: Express, server: Server) {
@@ -23,13 +21,16 @@ export async function setupVite(app: Express, server: Server) {
   };
 
   const vite = await createViteServer({
-    ...viteConfig,
-    configFile: false,
+    configFile: path.resolve(import.meta.dirname, "..", "vite.config.ts"),
     customLogger: {
       ...viteLogger,
       error: (msg, options) => {
-        viteLogger.error(msg, options);
-        process.exit(1);
+        // Pre-transform errors are usually transient, don't exit
+        if (!msg.includes('Pre-transform error')) {
+          viteLogger.error(msg, options);
+        } else {
+          viteLogger.warn(msg, options);
+        }
       },
     },
     server: serverOptions,

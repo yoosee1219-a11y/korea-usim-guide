@@ -13,3 +13,5 @@ vite.config.ts.*
 # IDE
 .cursor/
 .local/
+.vercel
+.env*.local

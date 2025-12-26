@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-export type LanguageCode = 'ko' | 'en' | 'vi' | 'th' | 'tl' | 'uz' | 'ne' | 'mn' | 'id' | 'my' | 'zh' | 'ru';
+export type LanguageCode = 'ko' | 'en' | 'vi' | 'ru';
 
 export interface LanguageInfo {
   code: LanguageCode;
@@ -12,14 +12,6 @@ export const SUPPORTED_LANGUAGES: LanguageInfo[] = [
   { code: 'ko', name: 'Korean', nativeName: '한국어' },
   { code: 'en', name: 'English', nativeName: 'English' },
   { code: 'vi', name: 'Vietnamese', nativeName: 'Tiếng Việt' },
-  { code: 'th', name: 'Thai', nativeName: 'ไทย' },
-  { code: 'tl', name: 'Tagalog', nativeName: 'Tagalog' },
-  { code: 'uz', name: 'Uzbek', nativeName: 'Oʻzbekcha' },
-  { code: 'ne', name: 'Nepali', nativeName: 'नेपाली' },
-  { code: 'mn', name: 'Mongolian', nativeName: 'Монгол' },
-  { code: 'id', name: 'Indonesian', nativeName: 'Bahasa Indonesia' },
-  { code: 'my', name: 'Burmese', nativeName: 'မြန်မာ' },
-  { code: 'zh', name: 'Chinese', nativeName: '中文' },
   { code: 'ru', name: 'Russian', nativeName: 'Русский' },
 ];
 
