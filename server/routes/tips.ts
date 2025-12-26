@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { verifyToken } from "../middleware/auth.js";
 import {
   getTips,
   getTipById,
@@ -11,8 +10,8 @@ import {
 
 const router = Router();
 
-// 모든 라우트에 인증 미들웨어 적용
-router.use(verifyToken);
+// 공개 API - 인증 불필요
+// (모든 사용자가 팁을 볼 수 있어야 함)
 
 // POST /api/tips/categories - 카테고리 목록 조회
 router.post("/categories", async (req, res) => {
