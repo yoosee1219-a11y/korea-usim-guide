@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Trash2, Edit, BarChart3, RefreshCw, Zap } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
+import { Toaster } from '@/components/ui/toaster'
 
 interface Keyword {
   id: string
@@ -30,6 +32,7 @@ interface KeywordStats {
 
 export default function KeywordList() {
   const [, navigate] = useLocation()
+  const { toast } = useToast()
   const [keywords, setKeywords] = useState<Keyword[]>([])
   const [stats, setStats] = useState<KeywordStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -180,11 +183,20 @@ export default function KeywordList() {
       .filter(line => line.length > 0)
 
     if (keywordLines.length === 0) {
-      alert('키워드를 입력해주세요.')
+      toast({
+        title: "⚠️ 입력 필요",
+        description: "키워드를 입력해주세요.",
+        variant: "destructive"
+      })
       return
     }
 
     if (!confirm(`${keywordLines.length}개의 키워드를 추가하시겠습니까?`)) return
+
+    toast({
+      title: "📝 키워드 추가 중...",
+      description: `${keywordLines.length}개의 키워드를 추가하고 있습니다.`,
+    })
 
     try {
       const token = localStorage.getItem('adminToken')
@@ -208,13 +220,24 @@ export default function KeywordList() {
         setBulkMode(false)
         fetchKeywords()
         fetchStats()
-        alert(`${result.created}개의 키워드가 추가되었습니다.`)
+        toast({
+          title: "✅ 키워드 추가 완료!",
+          description: `${result.created}개 추가됨 (중복 ${result.skipped}개 제외)`,
+        })
       } else {
-        alert(`대량 추가 실패: ${result.error || '알 수 없는 오류'}`)
+        toast({
+          title: "❌ 대량 추가 실패",
+          description: result.error || '알 수 없는 오류',
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error('Bulk add error:', error)
-      alert('대량 추가 중 오류가 발생했습니다.')
+      toast({
+        title: "❌ 오류 발생",
+        description: "대량 추가 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
     }
   }
 
@@ -222,6 +245,12 @@ export default function KeywordList() {
     if (!confirm(`AI가 ${count}개의 한국 유심 관련 키워드를 자동 생성합니다. 계속하시겠습니까?`)) return
 
     setIsGenerating(true)
+
+    // 시작 알림
+    toast({
+      title: "🤖 AI 키워드 생성 중...",
+      description: `${count}개의 키워드를 생성하고 있습니다. 잠시만 기다려주세요.`,
+    })
 
     try {
       const token = localStorage.getItem('adminToken')
@@ -242,14 +271,25 @@ export default function KeywordList() {
       if (response.ok) {
         fetchKeywords()
         fetchStats()
-        alert(`✅ ${result.created}개의 키워드가 자동 생성되었습니다.\n(중복 ${result.skipped}개 제외)`)
+        toast({
+          title: "✅ 키워드 생성 완료!",
+          description: `${result.created}개의 키워드가 생성되었습니다. (중복 ${result.skipped}개 제외)`,
+        })
       } else {
         const errorMsg = result.message || result.error || '알 수 없는 오류'
-        alert(`❌ 자동 생성 실패\n\n${errorMsg}${result.details ? `\n\n상세: ${result.details}` : ''}`)
+        toast({
+          title: "❌ 자동 생성 실패",
+          description: errorMsg,
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error('Auto generate error:', error)
-      alert(`❌ 자동 생성 중 오류가 발생했습니다.\n\n${error instanceof Error ? error.message : String(error)}`)
+      toast({
+        title: "❌ 오류 발생",
+        description: error instanceof Error ? error.message : '자동 생성 중 오류가 발생했습니다.',
+        variant: "destructive"
+      })
     } finally {
       setIsGenerating(false)
     }
@@ -268,13 +308,24 @@ export default function KeywordList() {
       if (response.ok) {
         fetchKeywords()
         fetchStats()
-        alert('삭제되었습니다.')
+        toast({
+          title: "✅ 삭제 완료",
+          description: "키워드가 삭제되었습니다.",
+        })
       } else {
-        alert('삭제 실패')
+        toast({
+          title: "❌ 삭제 실패",
+          description: "키워드 삭제 중 오류가 발생했습니다.",
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error('Delete error:', error)
-      alert('삭제 중 오류가 발생했습니다.')
+      toast({
+        title: "❌ 오류 발생",
+        description: "삭제 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
     }
   }
 
@@ -658,6 +709,7 @@ export default function KeywordList() {
           </div>
         )}
       </div>
+      <Toaster />
     </div>
   )
 }
