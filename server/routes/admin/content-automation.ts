@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "../../storage/db.js";
 import { requireAdminAuth } from "../../middleware/adminAuth.js";
 import { autoGenerateContent } from "../../../automation/workflows/content-automation.js";
+import { v2 } from '@google-cloud/translate';
 
 const router = Router();
 
@@ -225,6 +226,142 @@ router.post("/retry/:keywordId", async (req, res) => {
   } catch (error) {
     console.error('Retry error:', error);
     res.status(500).json({ error: 'Failed to retry' });
+  }
+});
+
+// POST - 누락된 번역 추가
+router.post("/add-missing-translations", async (req, res) => {
+  try {
+    const translationClient = new v2.Translate({
+      key: process.env.GOOGLE_TRANSLATE_API_KEY || '',
+    });
+
+    const ALL_LANGUAGES = [
+      { code: 'en', name: 'English' },
+      { code: 'vi', name: 'Vietnamese' },
+      { code: 'th', name: 'Thai' },
+      { code: 'tl', name: 'Tagalog' },
+      { code: 'uz', name: 'Uzbek' },
+      { code: 'ne', name: 'Nepali' },
+      { code: 'mn', name: 'Mongolian' },
+      { code: 'id', name: 'Indonesian' },
+      { code: 'my', name: 'Burmese' },
+      { code: 'zh-CN', name: 'Chinese (Simplified)', dbCode: 'zh' },
+      { code: 'ru', name: 'Russian' },
+    ];
+
+    console.log('🔄 Finding tips with missing translations...');
+
+    // 모든 한국어 원본 tip 찾기
+    const originals = await db.query(`
+      SELECT id, title, content, excerpt, slug, category_id, thumbnail_url, seo_meta
+      FROM tips
+      WHERE original_tip_id IS NULL AND language = 'ko'
+      ORDER BY created_at DESC
+    `);
+
+    console.log(`Found ${originals.rows.length} original tips`);
+
+    const results = [];
+
+    for (const original of originals.rows) {
+      console.log(`\nProcessing: ${original.title}`);
+
+      // 현재 존재하는 번역 찾기
+      const existing = await db.query(`
+        SELECT language
+        FROM tips
+        WHERE (original_tip_id = $1 OR id = $1) AND language != 'ko'
+      `, [original.id]);
+
+      const existingLanguages = existing.rows.map((r: any) => r.language);
+
+      // 누락된 언어 찾기
+      const missingLanguages = ALL_LANGUAGES.filter(lang => {
+        const dbCode = lang.dbCode || lang.code;
+        return !existingLanguages.includes(dbCode);
+      });
+
+      if (missingLanguages.length === 0) {
+        console.log(`  ✅ All translations exist`);
+        results.push({
+          tipId: original.id,
+          title: original.title,
+          missing: 0,
+          added: 0,
+          status: 'complete'
+        });
+        continue;
+      }
+
+      console.log(`  Missing: ${missingLanguages.length} languages`);
+
+      let successCount = 0;
+
+      for (const lang of missingLanguages) {
+        const langCode = lang.dbCode || lang.code;
+
+        try {
+          // 번역
+          const [translatedTitle] = await translationClient.translate(original.title, lang.code);
+          const [translatedExcerpt] = await translationClient.translate(original.excerpt, lang.code);
+          const [translatedContent] = await translationClient.translate(original.content, lang.code);
+
+          // 저장
+          await db.query(`
+            INSERT INTO tips (
+              category_id, slug, title, content, excerpt, thumbnail_url,
+              is_published, published_at, language, original_tip_id, seo_meta
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9, $10)
+          `, [
+            original.category_id,
+            original.slug,
+            translatedTitle,
+            translatedContent,
+            translatedExcerpt,
+            original.thumbnail_url,
+            true,
+            langCode,
+            original.id,
+            original.seo_meta
+          ]);
+
+          console.log(`    ✅ ${lang.name}`);
+          successCount++;
+
+          // Rate limiting
+          await new Promise(resolve => setTimeout(resolve, 250));
+
+        } catch (error) {
+          console.error(`    ❌ ${lang.name} failed:`, error instanceof Error ? error.message : String(error));
+        }
+      }
+
+      results.push({
+        tipId: original.id,
+        title: original.title,
+        missing: missingLanguages.length,
+        added: successCount,
+        status: successCount === missingLanguages.length ? 'success' : 'partial'
+      });
+    }
+
+    console.log('\n🎉 Translation update complete!');
+
+    res.json({
+      success: true,
+      message: 'Missing translations added',
+      processed: results.length,
+      results
+    });
+
+  } catch (error) {
+    console.error('Add translations error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to add missing translations',
+      message: error instanceof Error ? error.message : String(error)
+    });
   }
 });
 
