@@ -16,9 +16,6 @@ const PlanDetail = lazy(() => import("@/pages/plan-detail"));
 const Tips = lazy(() => import("@/pages/tips"));
 const TipDetail = lazy(() => import("@/pages/tip-detail"));
 const AdminLogin = lazy(() => import("@/pages/admin/login"));
-const AdminBlogList = lazy(() => import("@/pages/admin/blog-list"));
-const AdminBlogNew = lazy(() => import("@/pages/admin/blog-new"));
-const AdminBlogEdit = lazy(() => import("@/pages/admin/blog-edit"));
 const AdminPlanList = lazy(() => import("@/pages/admin/plan-list"));
 const AdminPlanNew = lazy(() => import("@/pages/admin/plan-new"));
 const AdminPlanEdit = lazy(() => import("@/pages/admin/plan-edit"));
@@ -49,24 +46,6 @@ function Router() {
         {/* 관리자 로그인 (보호 없음) */}
         <Route path="/admin/login" component={AdminLogin} />
         <Route path="/admin" component={AdminLogin} />
-
-        {/* 보호된 관리자 페이지 - 기본 페이지는 콘텐츠 자동화 */}
-        <Route path="/admin/blog">
-          <ProtectedRoute>
-            <AdminContentAutomation />
-          </ProtectedRoute>
-        </Route>
-        {/* 기존 블로그 경로들도 콘텐츠 자동화로 리다이렉트 */}
-        <Route path="/admin/blog/new">
-          <ProtectedRoute>
-            <AdminContentAutomation />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/admin/blog/edit/:id">
-          <ProtectedRoute>
-            <AdminContentAutomation />
-          </ProtectedRoute>
-        </Route>
         <Route path="/admin/plans">
           <ProtectedRoute>
             <AdminPlanList />
