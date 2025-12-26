@@ -242,13 +242,14 @@ export default function KeywordList() {
       if (response.ok) {
         fetchKeywords()
         fetchStats()
-        alert(`${result.created}개의 키워드가 자동 생성되었습니다.`)
+        alert(`✅ ${result.created}개의 키워드가 자동 생성되었습니다.\n(중복 ${result.skipped}개 제외)`)
       } else {
-        alert(`자동 생성 실패: ${result.error || '알 수 없는 오류'}`)
+        const errorMsg = result.message || result.error || '알 수 없는 오류'
+        alert(`❌ 자동 생성 실패\n\n${errorMsg}${result.details ? `\n\n상세: ${result.details}` : ''}`)
       }
     } catch (error) {
       console.error('Auto generate error:', error)
-      alert('자동 생성 중 오류가 발생했습니다.')
+      alert(`❌ 자동 생성 중 오류가 발생했습니다.\n\n${error instanceof Error ? error.message : String(error)}`)
     } finally {
       setIsGenerating(false)
     }

@@ -320,7 +320,12 @@ LG 유플러스 외국인 선불 요금제
     });
   } catch (error) {
     console.error('Auto-generate error:', error);
-    res.status(500).json({ error: 'Failed to auto-generate keywords' });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({
+      error: 'Failed to auto-generate keywords',
+      message: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+    });
   }
 });
 
