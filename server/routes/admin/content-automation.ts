@@ -3,15 +3,6 @@ import { db } from "../../storage/db.js";
 import { requireAdminAuth } from "../../middleware/adminAuth.js";
 import { autoGenerateContent } from "../../../automation/workflows/content-automation.js";
 import { v2 } from '@google-cloud/translate';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// 스케줄러 설정 파일 경로
-const SCHEDULER_SETTINGS_PATH = path.join(__dirname, '../../../automation/scheduler-settings.json');
 
 const router = Router();
 
@@ -241,17 +232,27 @@ router.post("/retry/:keywordId", async (req, res) => {
 // GET - 스케줄러 설정 조회
 router.get("/scheduler-settings", async (req, res) => {
   try {
-    if (fs.existsSync(SCHEDULER_SETTINGS_PATH)) {
-      const settings = JSON.parse(fs.readFileSync(SCHEDULER_SETTINGS_PATH, 'utf-8'));
-      res.json(settings);
+    const result = await db.query(
+      "SELECT value FROM app_settings WHERE key = 'scheduler_settings'"
+    );
+
+    if (result.rows.length > 0) {
+      res.json(result.rows[0].value);
     } else {
-      // 기본 설정
-      res.json({
+      // 기본 설정 반환 및 DB에 삽입
+      const defaultSettings = {
         enabled: false,
         interval: 24,
         postsPerDay: 1,
         lastRun: null
-      });
+      };
+
+      await db.query(
+        "INSERT INTO app_settings (key, value) VALUES ('scheduler_settings', $1) ON CONFLICT (key) DO NOTHING",
+        [JSON.stringify(defaultSettings)]
+      );
+
+      res.json(defaultSettings);
     }
   } catch (error) {
     console.error('Failed to read scheduler settings:', error);
@@ -264,13 +265,14 @@ router.post("/scheduler-settings", async (req, res) => {
   try {
     const settings = req.body;
 
-    // 디렉토리가 없으면 생성
-    const dir = path.dirname(SCHEDULER_SETTINGS_PATH);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-
-    fs.writeFileSync(SCHEDULER_SETTINGS_PATH, JSON.stringify(settings, null, 2));
+    // 데이터베이스에 저장 (UPSERT)
+    await db.query(
+      `INSERT INTO app_settings (key, value)
+       VALUES ('scheduler_settings', $1)
+       ON CONFLICT (key)
+       DO UPDATE SET value = $1, updated_at = CURRENT_TIMESTAMP`,
+      [JSON.stringify(settings)]
+    );
 
     res.json({ success: true, settings });
   } catch (error) {
@@ -284,12 +286,16 @@ router.post("/run-scheduler", async (req, res) => {
   try {
     console.log('🕐 Scheduler triggered');
 
-    // 설정 읽기
-    if (!fs.existsSync(SCHEDULER_SETTINGS_PATH)) {
+    // 설정 읽기 (데이터베이스에서)
+    const settingsResult = await db.query(
+      "SELECT value FROM app_settings WHERE key = 'scheduler_settings'"
+    );
+
+    if (settingsResult.rows.length === 0) {
       return res.json({ message: 'Scheduler not configured', processed: 0 });
     }
 
-    const settings = JSON.parse(fs.readFileSync(SCHEDULER_SETTINGS_PATH, 'utf-8'));
+    const settings = settingsResult.rows[0].value;
 
     if (!settings.enabled) {
       return res.json({ message: 'Scheduler is disabled', processed: 0 });
@@ -329,9 +335,12 @@ router.post("/run-scheduler", async (req, res) => {
     // 콘텐츠 생성
     const result = await autoGenerateContent(keyword.id);
 
-    // 마지막 실행 시간 업데이트
+    // 마지막 실행 시간 업데이트 (데이터베이스에)
     settings.lastRun = now.toISOString();
-    fs.writeFileSync(SCHEDULER_SETTINGS_PATH, JSON.stringify(settings, null, 2));
+    await db.query(
+      `UPDATE app_settings SET value = $1, updated_at = CURRENT_TIMESTAMP WHERE key = 'scheduler_settings'`,
+      [JSON.stringify(settings)]
+    );
 
     res.json({
       success: result.success,
