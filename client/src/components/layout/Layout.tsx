@@ -114,7 +114,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
           <div className="border-t mt-12 pt-8 text-center text-sm text-muted-foreground">
             &copy; {new Date().getFullYear()} KOREAUSIMGUIDE. {translations.footer.copyright}{" "}
-            <Link href="/admin/blog">
+            <Link href="/admin/login">
               <a className="text-muted-foreground/30 hover:text-muted-foreground/50 transition-colors text-xs">•</a>
             </Link>
           </div>

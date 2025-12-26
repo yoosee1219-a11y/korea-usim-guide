@@ -94,9 +94,6 @@ export default function AdminLogin() {
                 "로그인"
               )}
             </Button>
-            <p className="text-xs text-center text-gray-500 mt-4">
-              기본 비밀번호: admin123
-            </p>
           </form>
         </CardContent>
       </Card>
