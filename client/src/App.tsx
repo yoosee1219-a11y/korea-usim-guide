@@ -50,20 +50,21 @@ function Router() {
         <Route path="/admin/login" component={AdminLogin} />
         <Route path="/admin" component={AdminLogin} />
 
-        {/* 보호된 관리자 페이지 */}
+        {/* 보호된 관리자 페이지 - 기본 페이지는 콘텐츠 자동화 */}
         <Route path="/admin/blog">
           <ProtectedRoute>
-            <AdminBlogList />
+            <AdminContentAutomation />
           </ProtectedRoute>
         </Route>
+        {/* 기존 블로그 경로들도 콘텐츠 자동화로 리다이렉트 */}
         <Route path="/admin/blog/new">
           <ProtectedRoute>
-            <AdminBlogNew />
+            <AdminContentAutomation />
           </ProtectedRoute>
         </Route>
         <Route path="/admin/blog/edit/:id">
           <ProtectedRoute>
-            <AdminBlogEdit />
+            <AdminContentAutomation />
           </ProtectedRoute>
         </Route>
         <Route path="/admin/plans">
