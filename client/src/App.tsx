@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { getAuthToken } from "./lib/api.js";
 import { Spinner } from "@/components/ui/spinner";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // 페이지 컴포넌트를 동적으로 로드 (코드 스플리팅)
 const Home = lazy(() => import("@/pages/home"));
@@ -14,6 +15,7 @@ const Compare = lazy(() => import("@/pages/compare"));
 const PlanDetail = lazy(() => import("@/pages/plan-detail"));
 const Tips = lazy(() => import("@/pages/tips"));
 const TipDetail = lazy(() => import("@/pages/tip-detail"));
+const AdminLogin = lazy(() => import("@/pages/admin/login"));
 const AdminBlogList = lazy(() => import("@/pages/admin/blog-list"));
 const AdminBlogNew = lazy(() => import("@/pages/admin/blog-new"));
 const AdminBlogEdit = lazy(() => import("@/pages/admin/blog-edit"));
@@ -43,15 +45,58 @@ function Router() {
         <Route path="/plans/:id" component={PlanDetail} />
         <Route path="/tips" component={Tips} />
         <Route path="/tips/:id" component={TipDetail} />
-        <Route path="/admin/blog" component={AdminBlogList} />
-        <Route path="/admin/blog/new" component={AdminBlogNew} />
-        <Route path="/admin/blog/edit/:id" component={AdminBlogEdit} />
-        <Route path="/admin/plans" component={AdminPlanList} />
-        <Route path="/admin/plans/new" component={AdminPlanNew} />
-        <Route path="/admin/plans/edit/:id" component={AdminPlanEdit} />
-        <Route path="/admin/tips-grouped" component={AdminTipsGrouped} />
-        <Route path="/admin/keywords" component={AdminKeywordList} />
-        <Route path="/admin/content-automation" component={AdminContentAutomation} />
+
+        {/* 관리자 로그인 (보호 없음) */}
+        <Route path="/admin/login" component={AdminLogin} />
+        <Route path="/admin" component={AdminLogin} />
+
+        {/* 보호된 관리자 페이지 */}
+        <Route path="/admin/blog">
+          <ProtectedRoute>
+            <AdminBlogList />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/blog/new">
+          <ProtectedRoute>
+            <AdminBlogNew />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/blog/edit/:id">
+          <ProtectedRoute>
+            <AdminBlogEdit />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/plans">
+          <ProtectedRoute>
+            <AdminPlanList />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/plans/new">
+          <ProtectedRoute>
+            <AdminPlanNew />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/plans/edit/:id">
+          <ProtectedRoute>
+            <AdminPlanEdit />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/tips-grouped">
+          <ProtectedRoute>
+            <AdminTipsGrouped />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/keywords">
+          <ProtectedRoute>
+            <AdminKeywordList />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/content-automation">
+          <ProtectedRoute>
+            <AdminContentAutomation />
+          </ProtectedRoute>
+        </Route>
+
         <Route component={NotFound} />
       </Switch>
     </Suspense>
