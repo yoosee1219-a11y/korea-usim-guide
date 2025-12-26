@@ -4,6 +4,7 @@ import { optimizeForSEO } from "../services/seo-optimizer.js";
 import { findRelatedContent, insertInternalLinks } from "../services/internal-linker.js";
 import { generateContentImages } from "../services/image-service.js";
 import slugify from "slugify";
+import { v2 } from '@google-cloud/translate';
 
 interface AutomationResult {
   success: boolean;
@@ -171,8 +172,8 @@ export async function autoGenerateContent(keywordId: string): Promise<Automation
     generatedTipId = tipResult.rows[0].id;
     console.log(`✅ Korean tip created: ${generatedTipId}`);
 
-    // [10] 다국어 번역 (기존 번역 API 활용)
-    console.log(`\n[10/11] Translating to 3 languages...`);
+    // [10] 다국어 번역 (11개 언어로 번역)
+    console.log(`\n[10/11] Translating to 11 languages...`);
     await translateTip(generatedTipId, tipResult.rows[0]);
     console.log(`✅ Translations completed`);
 
@@ -222,43 +223,66 @@ export async function autoGenerateContent(keywordId: string): Promise<Automation
   }
 }
 
+// Initialize Google Cloud Translation client (v2 API with API key)
+const translationClient = new v2.Translate({
+  key: process.env.GOOGLE_TRANSLATE_API_KEY || '',
+});
+
 /**
- * 번역 함수 (기존 translate.ts 로직 활용)
+ * 번역 함수 - Google Cloud Translation API 사용
  */
 async function translateTip(originalTipId: string, originalTip: any): Promise<void> {
   const LANGUAGES = [
     { code: 'en', name: 'English' },
     { code: 'vi', name: 'Vietnamese' },
+    { code: 'th', name: 'Thai' },
+    { code: 'tl', name: 'Tagalog' },
+    { code: 'uz', name: 'Uzbek' },
+    { code: 'ne', name: 'Nepali' },
+    { code: 'mn', name: 'Mongolian' },
+    { code: 'id', name: 'Indonesian' },
+    { code: 'my', name: 'Burmese' },
+    { code: 'zh-CN', name: 'Chinese (Simplified)', dbCode: 'zh' },
     { code: 'ru', name: 'Russian' },
   ];
-
-  // Google Translate 사용 (기존 코드 재사용)
-  // 간략화를 위해 여기서는 로그만 출력
-  // 실제로는 server/routes/translate.ts의 로직을 import해서 사용
 
   for (const lang of LANGUAGES) {
     const langCode = lang.dbCode || lang.code;
     console.log(`   Translating to ${lang.name}...`);
 
-    // 실제 번역 API 호출은 생략 (나중에 구현)
-    // 지금은 원본 그대로 저장 (TODO)
-    await db.query(`
-      INSERT INTO tips (
-        category_id, slug, title, content, excerpt, thumbnail_url,
-        is_published, published_at, language, original_tip_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, [
-      originalTip.category_id,
-      originalTip.slug,
-      `[${lang.code.toUpperCase()}] ${originalTip.title}`,  // TODO: 실제 번역
-      originalTip.content,                                    // TODO: 실제 번역
-      originalTip.excerpt,                                    // TODO: 실제 번역
-      originalTip.thumbnail_url,
-      true,
-      new Date(),
-      langCode,
-      originalTipId
-    ]);
+    try {
+      // 번역할 텍스트
+      const [translatedTitle] = await translationClient.translate(originalTip.title, lang.code);
+      const [translatedExcerpt] = await translationClient.translate(originalTip.excerpt, lang.code);
+      const [translatedContent] = await translationClient.translate(originalTip.content, lang.code);
+
+      // 번역된 콘텐츠 저장
+      await db.query(`
+        INSERT INTO tips (
+          category_id, slug, title, content, excerpt, thumbnail_url,
+          is_published, published_at, language, original_tip_id, seo_meta
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      `, [
+        originalTip.category_id,
+        originalTip.slug,
+        translatedTitle,
+        translatedContent,
+        translatedExcerpt,
+        originalTip.thumbnail_url,
+        true,
+        new Date(),
+        langCode,
+        originalTipId,
+        originalTip.seo_meta
+      ]);
+
+      // 번역 간 간격 (rate limiting 방지)
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+    } catch (error) {
+      console.error(`   ❌ Failed to translate to ${lang.name}:`, error);
+      // 번역 실패해도 계속 진행
+    }
   }
 
   console.log(`   ✅ ${LANGUAGES.length} translations created`);
