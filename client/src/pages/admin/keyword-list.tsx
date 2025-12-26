@@ -3,7 +3,7 @@ import { Link, useLocation } from 'wouter'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Trash2, Edit, BarChart3, RefreshCw } from 'lucide-react'
+import { Plus, Trash2, Edit, BarChart3, RefreshCw, Zap } from 'lucide-react'
 
 interface Keyword {
   id: string
@@ -37,6 +37,10 @@ export default function KeywordList() {
   const [password, setPassword] = useState('')
   const [filter, setFilter] = useState<string>('all')
   const [showAddModal, setShowAddModal] = useState(false)
+  const [bulkMode, setBulkMode] = useState(false)
+  const [bulkKeywords, setBulkKeywords] = useState('')
+  const [defaultPriority, setDefaultPriority] = useState<'high' | 'medium' | 'low'>('medium')
+  const [isGenerating, setIsGenerating] = useState(false)
   const [newKeyword, setNewKeyword] = useState({
     keyword: '',
     search_intent: '',
@@ -169,6 +173,87 @@ export default function KeywordList() {
     }
   }
 
+  const handleBulkAddKeywords = async () => {
+    const keywordLines = bulkKeywords
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+
+    if (keywordLines.length === 0) {
+      alert('키워드를 입력해주세요.')
+      return
+    }
+
+    if (!confirm(`${keywordLines.length}개의 키워드를 추가하시겠습니까?`)) return
+
+    try {
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch('/api/admin/keywords/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          keywords: keywordLines,
+          priority: defaultPriority
+        })
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        setShowAddModal(false)
+        setBulkKeywords('')
+        setBulkMode(false)
+        fetchKeywords()
+        fetchStats()
+        alert(`${result.created}개의 키워드가 추가되었습니다.`)
+      } else {
+        alert(`대량 추가 실패: ${result.error || '알 수 없는 오류'}`)
+      }
+    } catch (error) {
+      console.error('Bulk add error:', error)
+      alert('대량 추가 중 오류가 발생했습니다.')
+    }
+  }
+
+  const handleAutoGenerateKeywords = async (count: number) => {
+    if (!confirm(`AI가 ${count}개의 한국 유심 관련 키워드를 자동 생성합니다. 계속하시겠습니까?`)) return
+
+    setIsGenerating(true)
+
+    try {
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch('/api/admin/keywords/auto-generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          count,
+          priority: defaultPriority
+        })
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        fetchKeywords()
+        fetchStats()
+        alert(`${result.created}개의 키워드가 자동 생성되었습니다.`)
+      } else {
+        alert(`자동 생성 실패: ${result.error || '알 수 없는 오류'}`)
+      }
+    } catch (error) {
+      console.error('Auto generate error:', error)
+      alert('자동 생성 중 오류가 발생했습니다.')
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
   const handleDelete = async (id: string) => {
     if (!confirm('정말 삭제하시겠습니까?')) return
 
@@ -273,6 +358,14 @@ export default function KeywordList() {
             </Link>
             <Button onClick={handleLogout} variant="outline">
               로그아웃
+            </Button>
+            <Button onClick={() => handleAutoGenerateKeywords(10)} disabled={isGenerating} variant="secondary">
+              <Zap className="w-4 h-4 mr-2" />
+              {isGenerating ? '생성 중...' : 'AI 10개 생성'}
+            </Button>
+            <Button onClick={() => handleAutoGenerateKeywords(30)} disabled={isGenerating} variant="secondary">
+              <Zap className="w-4 h-4 mr-2" />
+              {isGenerating ? '생성 중...' : 'AI 30개 생성'}
             </Button>
             <Button onClick={() => setShowAddModal(true)}>
               <Plus className="w-4 h-4 mr-2" />
@@ -427,73 +520,136 @@ export default function KeywordList() {
         {/* Add Keyword Modal */}
         {showAddModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <Card className="max-w-2xl w-full p-6 m-4">
-              <h2 className="text-2xl font-bold mb-4">키워드 추가</h2>
-              <form onSubmit={handleAddKeyword} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">키워드 *</label>
-                  <input
-                    type="text"
-                    value={newKeyword.keyword}
-                    onChange={(e) => setNewKeyword({ ...newKeyword, keyword: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg"
-                    placeholder="예: 한국 외국인 유심 카드"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">검색 의도</label>
-                  <input
-                    type="text"
-                    value={newKeyword.search_intent}
-                    onChange={(e) => setNewKeyword({ ...newKeyword, search_intent: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg"
-                    placeholder="예: 입국 직후 필수"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">예상 CPC (원)</label>
-                  <input
-                    type="number"
-                    value={newKeyword.cpc_krw}
-                    onChange={(e) => setNewKeyword({ ...newKeyword, cpc_krw: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg"
-                    placeholder="예: 2500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">우선순위</label>
-                  <select
-                    value={newKeyword.priority}
-                    onChange={(e) => setNewKeyword({ ...newKeyword, priority: e.target.value as any })}
-                    className="w-full px-4 py-2 border rounded-lg"
-                  >
-                    <option value="high">높음</option>
-                    <option value="medium">중간</option>
-                    <option value="low">낮음</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">관련 키워드 (쉼표로 구분)</label>
-                  <textarea
-                    value={newKeyword.related_keywords}
-                    onChange={(e) => setNewKeyword({ ...newKeyword, related_keywords: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg"
-                    placeholder="예: 외국인등록증 발급방법, LG U+ 외국인 유심 개통"
-                    rows={3}
-                  />
-                </div>
-                <div className="flex gap-2 justify-end">
+            <Card className="max-w-2xl w-full p-6 m-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">키워드 추가</h2>
+                <div className="flex gap-2">
                   <Button
                     type="button"
-                    variant="outline"
-                    onClick={() => setShowAddModal(false)}
+                    variant={bulkMode ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setBulkMode(!bulkMode)}
                   >
-                    취소
+                    {bulkMode ? '단일 입력' : '대량 입력'}
                   </Button>
-                  <Button type="submit">추가</Button>
                 </div>
-              </form>
+              </div>
+
+              {bulkMode ? (
+                // Bulk Mode
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      키워드 목록 (한 줄에 하나씩 입력)
+                    </label>
+                    <textarea
+                      value={bulkKeywords}
+                      onChange={(e) => setBulkKeywords(e.target.value)}
+                      className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                      placeholder="한국 외국인 유심 카드&#10;외국인등록증 발급방법&#10;LG U+ 외국인 요금제&#10;SK텔레콤 선불 유심&#10;..."
+                      rows={15}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      현재 {bulkKeywords.split('\n').filter(l => l.trim()).length}개 키워드
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">기본 우선순위</label>
+                    <select
+                      value={defaultPriority}
+                      onChange={(e) => setDefaultPriority(e.target.value as any)}
+                      className="w-full px-4 py-2 border rounded-lg"
+                    >
+                      <option value="high">높음</option>
+                      <option value="medium">중간</option>
+                      <option value="low">낮음</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setShowAddModal(false)
+                        setBulkMode(false)
+                        setBulkKeywords('')
+                      }}
+                    >
+                      취소
+                    </Button>
+                    <Button onClick={handleBulkAddKeywords}>
+                      {bulkKeywords.split('\n').filter(l => l.trim()).length}개 추가
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                // Single Mode
+                <form onSubmit={handleAddKeyword} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">키워드 *</label>
+                    <input
+                      type="text"
+                      value={newKeyword.keyword}
+                      onChange={(e) => setNewKeyword({ ...newKeyword, keyword: e.target.value })}
+                      className="w-full px-4 py-2 border rounded-lg"
+                      placeholder="예: 한국 외국인 유심 카드"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">검색 의도</label>
+                    <input
+                      type="text"
+                      value={newKeyword.search_intent}
+                      onChange={(e) => setNewKeyword({ ...newKeyword, search_intent: e.target.value })}
+                      className="w-full px-4 py-2 border rounded-lg"
+                      placeholder="예: 입국 직후 필수"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">예상 CPC (원)</label>
+                    <input
+                      type="number"
+                      value={newKeyword.cpc_krw}
+                      onChange={(e) => setNewKeyword({ ...newKeyword, cpc_krw: e.target.value })}
+                      className="w-full px-4 py-2 border rounded-lg"
+                      placeholder="예: 2500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">우선순위</label>
+                    <select
+                      value={newKeyword.priority}
+                      onChange={(e) => setNewKeyword({ ...newKeyword, priority: e.target.value as any })}
+                      className="w-full px-4 py-2 border rounded-lg"
+                    >
+                      <option value="high">높음</option>
+                      <option value="medium">중간</option>
+                      <option value="low">낮음</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">관련 키워드 (쉼표로 구분)</label>
+                    <textarea
+                      value={newKeyword.related_keywords}
+                      onChange={(e) => setNewKeyword({ ...newKeyword, related_keywords: e.target.value })}
+                      className="w-full px-4 py-2 border rounded-lg"
+                      placeholder="예: 외국인등록증 발급방법, LG U+ 외국인 유심 개통"
+                      rows={3}
+                    />
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowAddModal(false)}
+                    >
+                      취소
+                    </Button>
+                    <Button type="submit">추가</Button>
+                  </div>
+                </form>
+              )}
             </Card>
           </div>
         )}

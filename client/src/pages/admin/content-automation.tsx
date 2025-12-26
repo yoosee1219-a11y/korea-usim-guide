@@ -3,7 +3,7 @@ import { Link, useLocation } from 'wouter'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Play, RefreshCw, AlertCircle, CheckCircle, Clock, Zap } from 'lucide-react'
+import { Play, RefreshCw, AlertCircle, CheckCircle, Clock, Zap, Settings, Calendar } from 'lucide-react'
 
 interface Keyword {
   id: string
@@ -41,6 +41,12 @@ export default function ContentAutomation() {
   const [password, setPassword] = useState('')
   const [generating, setGenerating] = useState<Set<string>>(new Set())
   const [results, setResults] = useState<Map<string, GenerationResult>>(new Map())
+  const [schedulerSettings, setSchedulerSettings] = useState({
+    enabled: false,
+    interval: 24, // hours
+    postsPerDay: 1
+  })
+  const [showSchedulerModal, setShowSchedulerModal] = useState(false)
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken')
@@ -80,11 +86,14 @@ export default function ContentAutomation() {
     try {
       const token = localStorage.getItem('adminToken')
 
-      const [keywordsRes, statsRes] = await Promise.all([
+      const [keywordsRes, statsRes, schedulerRes] = await Promise.all([
         fetch('/api/admin/keywords?status=pending', {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
         fetch('/api/admin/content-automation/stats', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch('/api/admin/content-automation/scheduler-settings', {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ])
@@ -95,17 +104,46 @@ export default function ContentAutomation() {
         return
       }
 
-      const [keywordsData, statsData] = await Promise.all([
+      const [keywordsData, statsData, schedulerData] = await Promise.all([
         keywordsRes.json(),
-        statsRes.json()
+        statsRes.json(),
+        schedulerRes.json()
       ])
 
       setKeywords(keywordsData)
       setStats(statsData)
+      if (schedulerData) {
+        setSchedulerSettings(schedulerData)
+      }
     } catch (error) {
       console.error('Failed to fetch data:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSaveScheduler = async () => {
+    try {
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch('/api/admin/content-automation/scheduler-settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(schedulerSettings)
+      })
+
+      if (response.ok) {
+        alert('스케줄러 설정이 저장되었습니다.')
+        setShowSchedulerModal(false)
+        fetchData()
+      } else {
+        alert('스케줄러 설정 저장 실패')
+      }
+    } catch (error) {
+      console.error('Save scheduler error:', error)
+      alert('스케줄러 설정 저장 중 오류가 발생했습니다.')
     }
   }
 
@@ -333,24 +371,54 @@ export default function ContentAutomation() {
           </div>
         )}
 
-        {/* Batch Actions */}
-        <Card className="p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold mb-1">일괄 생성</h2>
-              <p className="text-sm text-gray-600">
-                대기 중인 {keywords.length}개 키워드를 한 번에 처리합니다.
-              </p>
+        {/* Scheduler & Batch Actions */}
+        <div className="grid grid-cols-2 gap-6 mb-6">
+          <Card className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-blue-500" />
+                <h2 className="text-lg font-semibold">자동 발행 스케줄러</h2>
+              </div>
+              <Badge variant={schedulerSettings.enabled ? 'default' : 'secondary'}>
+                {schedulerSettings.enabled ? '활성화' : '비활성화'}
+              </Badge>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">
+              {schedulerSettings.enabled ? (
+                <>하루에 <strong>{schedulerSettings.postsPerDay}개</strong> 자동 발행 중</>
+              ) : (
+                '스케줄러를 활성화하여 자동 발행 시작'
+              )}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSchedulerModal(true)}
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              설정 변경
+            </Button>
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h2 className="text-lg font-semibold mb-1">일괄 생성</h2>
+                <p className="text-sm text-gray-600">
+                  대기 중인 {keywords.length}개 키워드를 한 번에 처리합니다.
+                </p>
+              </div>
             </div>
             <Button
               onClick={handleBatchGenerate}
               disabled={keywords.length === 0}
+              size="sm"
             >
               <Play className="w-4 h-4 mr-2" />
               일괄 생성 시작
             </Button>
-          </div>
-        </Card>
+          </Card>
+        </div>
 
         {/* Loading */}
         {loading && (
@@ -475,6 +543,78 @@ export default function ContentAutomation() {
               </tbody>
             </table>
           </Card>
+        )}
+
+        {/* Scheduler Settings Modal */}
+        {showSchedulerModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <Card className="max-w-md w-full p-6 m-4">
+              <h2 className="text-2xl font-bold mb-4">자동 발행 스케줄러 설정</h2>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">스케줄러 활성화</label>
+                  <input
+                    type="checkbox"
+                    checked={schedulerSettings.enabled}
+                    onChange={(e) => setSchedulerSettings({ ...schedulerSettings, enabled: e.target.checked })}
+                    className="w-4 h-4 rounded"
+                  />
+                </div>
+
+                {schedulerSettings.enabled && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        발행 간격
+                      </label>
+                      <select
+                        value={schedulerSettings.postsPerDay}
+                        onChange={(e) => {
+                          const postsPerDay = parseInt(e.target.value)
+                          setSchedulerSettings({
+                            ...schedulerSettings,
+                            postsPerDay,
+                            interval: 24 / postsPerDay
+                          })
+                        }}
+                        className="w-full px-4 py-2 border rounded-lg"
+                      >
+                        <option value="1">하루 1개 (24시간 간격)</option>
+                        <option value="2">하루 2개 (12시간 간격)</option>
+                        <option value="3">하루 3개 (8시간 간격)</option>
+                        <option value="4">하루 4개 (6시간 간격)</option>
+                        <option value="6">하루 6개 (4시간 간격)</option>
+                        <option value="8">하루 8개 (3시간 간격)</option>
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        현재 설정: {schedulerSettings.interval}시간마다 1개씩 발행
+                      </p>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-sm text-blue-800">
+                        <strong>💡 안내:</strong> 스케줄러가 활성화되면 대기 중인 키워드를 자동으로 처리합니다.
+                        Vercel 무료 플랜은 10초 제한이 있어 복잡한 콘텐츠는 타임아웃될 수 있습니다.
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="flex gap-2 justify-end mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowSchedulerModal(false)}
+                >
+                  취소
+                </Button>
+                <Button onClick={handleSaveScheduler}>
+                  저장
+                </Button>
+              </div>
+            </Card>
+          </div>
         )}
       </div>
     </div>

@@ -3,6 +3,15 @@ import { db } from "../../storage/db.js";
 import { requireAdminAuth } from "../../middleware/adminAuth.js";
 import { autoGenerateContent } from "../../../automation/workflows/content-automation.js";
 import { v2 } from '@google-cloud/translate';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 스케줄러 설정 파일 경로
+const SCHEDULER_SETTINGS_PATH = path.join(__dirname, '../../../automation/scheduler-settings.json');
 
 const router = Router();
 
@@ -226,6 +235,117 @@ router.post("/retry/:keywordId", async (req, res) => {
   } catch (error) {
     console.error('Retry error:', error);
     res.status(500).json({ error: 'Failed to retry' });
+  }
+});
+
+// GET - 스케줄러 설정 조회
+router.get("/scheduler-settings", async (req, res) => {
+  try {
+    if (fs.existsSync(SCHEDULER_SETTINGS_PATH)) {
+      const settings = JSON.parse(fs.readFileSync(SCHEDULER_SETTINGS_PATH, 'utf-8'));
+      res.json(settings);
+    } else {
+      // 기본 설정
+      res.json({
+        enabled: false,
+        interval: 24,
+        postsPerDay: 1,
+        lastRun: null
+      });
+    }
+  } catch (error) {
+    console.error('Failed to read scheduler settings:', error);
+    res.status(500).json({ error: 'Failed to read scheduler settings' });
+  }
+});
+
+// POST - 스케줄러 설정 저장
+router.post("/scheduler-settings", async (req, res) => {
+  try {
+    const settings = req.body;
+
+    // 디렉토리가 없으면 생성
+    const dir = path.dirname(SCHEDULER_SETTINGS_PATH);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    fs.writeFileSync(SCHEDULER_SETTINGS_PATH, JSON.stringify(settings, null, 2));
+
+    res.json({ success: true, settings });
+  } catch (error) {
+    console.error('Failed to save scheduler settings:', error);
+    res.status(500).json({ error: 'Failed to save scheduler settings' });
+  }
+});
+
+// POST - 스케줄러 실행 (크론/수동 호출용)
+router.post("/run-scheduler", async (req, res) => {
+  try {
+    console.log('🕐 Scheduler triggered');
+
+    // 설정 읽기
+    if (!fs.existsSync(SCHEDULER_SETTINGS_PATH)) {
+      return res.json({ message: 'Scheduler not configured', processed: 0 });
+    }
+
+    const settings = JSON.parse(fs.readFileSync(SCHEDULER_SETTINGS_PATH, 'utf-8'));
+
+    if (!settings.enabled) {
+      return res.json({ message: 'Scheduler is disabled', processed: 0 });
+    }
+
+    // 마지막 실행 시간 확인
+    const now = new Date();
+    if (settings.lastRun) {
+      const lastRun = new Date(settings.lastRun);
+      const hoursSinceLastRun = (now.getTime() - lastRun.getTime()) / (1000 * 60 * 60);
+
+      if (hoursSinceLastRun < settings.interval) {
+        console.log(`⏱️ Too soon: ${hoursSinceLastRun.toFixed(1)}h since last run (interval: ${settings.interval}h)`);
+        return res.json({
+          message: 'Not enough time since last run',
+          hoursSinceLastRun: hoursSinceLastRun.toFixed(1),
+          nextRunIn: (settings.interval - hoursSinceLastRun).toFixed(1)
+        });
+      }
+    }
+
+    // 대기 중인 키워드 가져오기
+    const pendingKeywords = await db.query(
+      'SELECT * FROM content_keywords WHERE status = $1 ORDER BY priority DESC, created_at ASC LIMIT 1',
+      ['pending']
+    );
+
+    if (pendingKeywords.rows.length === 0) {
+      console.log('✅ No pending keywords');
+      return res.json({ message: 'No pending keywords', processed: 0 });
+    }
+
+    const keyword = pendingKeywords.rows[0];
+
+    console.log(`📝 Processing keyword: "${keyword.keyword}"`);
+
+    // 콘텐츠 생성
+    const result = await autoGenerateContent(keyword.id);
+
+    // 마지막 실행 시간 업데이트
+    settings.lastRun = now.toISOString();
+    fs.writeFileSync(SCHEDULER_SETTINGS_PATH, JSON.stringify(settings, null, 2));
+
+    res.json({
+      success: result.success,
+      processed: 1,
+      keyword: keyword.keyword,
+      tipId: result.tipId,
+      slug: result.slug,
+      error: result.error,
+      nextRunAt: new Date(now.getTime() + settings.interval * 60 * 60 * 1000).toISOString()
+    });
+
+  } catch (error) {
+    console.error('Scheduler run error:', error);
+    res.status(500).json({ error: 'Scheduler execution failed' });
   }
 });
 
