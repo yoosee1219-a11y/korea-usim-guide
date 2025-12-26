@@ -225,9 +225,9 @@ export async function generateContentImages(
         // Unsplash도 실패하면 플레이스홀더 이미지 사용
         console.warn(`⚠️ Unsplash also failed, using placeholder`);
         thumbnail = {
-          url: `https://via.placeholder.com/1024x1024.png?text=${encodeURIComponent(keyword)}`,
+          url: `https://placehold.co/1024x1024/e2e8f0/64748b?text=${encodeURIComponent(keyword)}`,
           type: 'stock',
-          source: 'unsplash',
+          source: 'placeholder',
           query: keyword
         };
       } else {
