@@ -498,17 +498,20 @@ export default function KeywordList() {
                       {new Date(keyword.created_at).toLocaleDateString('ko-KR')}
                     </td>
                     <td className="px-6 py-4 text-sm font-medium">
-                      {keyword.tip_id && (
-                        <Link href={`/tips/${keyword.tip_id}`}>
-                          <a className="text-blue-600 hover:text-blue-900 mr-4">보기</a>
-                        </Link>
-                      )}
-                      <button
-                        onClick={() => handleDelete(keyword.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        삭제
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {keyword.tip_id && (
+                          <Link href={`/tips/${keyword.tip_id}`}>
+                            <a className="text-blue-600 hover:text-blue-900">보기</a>
+                          </Link>
+                        )}
+                        <button
+                          onClick={() => handleDelete(keyword.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="삭제"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
