@@ -45,7 +45,15 @@ router.post("/", async (req, res) => {
     if (body.is_published !== undefined) filters.is_published = Boolean(body.is_published);
     if (body.language) filters.language = body.language;
 
+    console.log('🔍 [DEBUG] /api/tips - Received request:', { body, filters });
+
     const result = await getTips(filters);
+
+    console.log('✅ [DEBUG] /api/tips - Query result:', {
+      count: result.tips.length,
+      languages: [...new Set(result.tips.map(t => t.language))]
+    });
+
     res.json(result);
   } catch (error) {
     console.error("Error fetching tips:", error);
@@ -71,7 +79,15 @@ router.post("/slug/:slug", async (req, res) => {
     const body = req.body || {};
     const language = body.language || 'ko';
 
+    console.log('🔍 [DEBUG] /api/tips/slug/:slug - Received request:', { slug, body, language });
+
     const tip = await getTipBySlug(slug, language);
+
+    console.log('✅ [DEBUG] /api/tips/slug/:slug - Query result:', tip ? {
+      id: tip.id,
+      language: tip.language,
+      title: tip.title.substring(0, 50)
+    } : null);
 
     if (!tip) {
       return res.status(404).json({ message: "Tip not found" });

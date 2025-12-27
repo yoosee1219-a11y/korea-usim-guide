@@ -141,6 +141,10 @@ export async function getTips(filters: TipFilters = {}): Promise<{ tips: Tip[]; 
 
   params.push(limit, offset);
 
+  console.log('🔍 [DEBUG] getTips - SQL Query:', query);
+  console.log('🔍 [DEBUG] getTips - Parameters:', params);
+  console.log('🔍 [DEBUG] getTips - Filters:', filters);
+
   try {
     return await queryWithRetry(async () => {
       const countResult = await db.query(countQuery, params.slice(0, params.length - 2));
