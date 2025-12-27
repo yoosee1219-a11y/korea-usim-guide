@@ -222,14 +222,21 @@ export async function generateContentImages(
       console.warn(`⚠️ AI thumbnail failed (${aiError.message}), falling back to Unsplash`);
       const unsplashImages = await searchStockImages(keyword, 1);
       if (unsplashImages.length === 0) {
-        // Unsplash도 실패하면 플레이스홀더 이미지 사용
-        console.warn(`⚠️ Unsplash also failed, using placeholder`);
-        thumbnail = {
-          url: `https://placehold.co/1024x1024/e2e8f0/64748b?text=${encodeURIComponent(keyword)}`,
-          type: 'stock',
-          source: 'placeholder',
-          query: keyword
-        };
+        // Unsplash도 실패하면 한국 관련 기본 이미지 사용
+        console.warn(`⚠️ Unsplash also failed, using default Korea image`);
+        const fallbackImages = await searchStockImages('korea sim card mobile', 1);
+        if (fallbackImages.length > 0) {
+          thumbnail = fallbackImages[0];
+        } else {
+          // 최후의 수단: Unsplash의 고정 이미지 URL 사용
+          thumbnail = {
+            url: 'https://images.unsplash.com/photo-1551410224-699683e15636?w=1024&h=1024&fit=crop',
+            type: 'stock',
+            source: 'unsplash',
+            query: 'korea'
+          };
+        }
+        console.log(`✅ Thumbnail: Default fallback image`);
       } else {
         thumbnail = unsplashImages[0];
         console.log(`✅ Thumbnail: Unsplash fallback`);
