@@ -66,15 +66,10 @@ export async function autoGenerateContent(keywordId: string): Promise<Automation
     }
     console.log(`✅ Content validation passed`);
 
-    // [4] 이미지 생성
-    console.log(`\n[4/11] Generating images...`);
-    const images = await generateContentImages(
-      keywordData.keyword,
-      generatedContent.thumbnail_suggestion
-    );
-    console.log(`✅ Images generated:`);
-    console.log(`   - Thumbnail: ${images.thumbnail.url}`);
-    console.log(`   - Content images: ${images.contentImages.length}`);
+    // [4] 이미지 생성 (비활성화 - 관리자가 직접 설정)
+    console.log(`\n[4/11] Skipping image generation (admin will set manually)...`);
+    const thumbnailUrl = 'https://images.unsplash.com/photo-1551410224-699683e15636?w=1024&h=1024&fit=crop';
+    console.log(`✅ Using default placeholder image`);
 
     // [5] SEO 최적화
     console.log(`\n[5/11] Optimizing for SEO...`);
@@ -130,24 +125,10 @@ export async function autoGenerateContent(keywordId: string): Promise<Automation
       console.log(`ℹ️ No related content found, skipping internal links`);
     }
 
-    // [8] 이미지를 콘텐츠에 삽입
-    console.log(`\n[8/11] Inserting images into content...`);
+    // [8] 이미지를 콘텐츠에 삽입 (비활성화 - 관리자가 직접 삽입)
+    console.log(`\n[8/11] Skipping content image insertion (admin will add manually)...`);
     let contentWithImages = contentWithLinks;
-
-    // 본문 이미지 삽입 (첫 번째 H2 태그 다음에)
-    if (images.contentImages.length > 0) {
-      const firstH2Index = contentWithImages.indexOf('<h2>');
-      if (firstH2Index !== -1) {
-        const afterFirstH2 = contentWithImages.indexOf('</h2>', firstH2Index) + 5;
-        const imageHtml = images.contentImages
-          .map(img => `<img src="${img.url}" alt="${keywordData.keyword}" class="content-image" loading="lazy" />`)
-          .join('\n');
-        contentWithImages = contentWithImages.slice(0, afterFirstH2) +
-          '\n' + imageHtml + '\n' +
-          contentWithImages.slice(afterFirstH2);
-      }
-    }
-    console.log(`✅ ${images.contentImages.length} images inserted into content`);
+    console.log(`✅ Content ready without images`);
 
     // [9] tips 테이블에 저장 (한국어 원본)
     console.log(`\n[9/11] Saving Korean original to database...`);
@@ -163,7 +144,7 @@ export async function autoGenerateContent(keywordId: string): Promise<Automation
       generatedContent.title,
       contentWithImages,                 // 이미지 포함된 콘텐츠
       generatedContent.excerpt,
-      images.thumbnail.url,              // AI 생성 대표 이미지
+      thumbnailUrl,                      // 기본 이미지 (관리자가 나중에 변경)
       'ko',                              // language
       true,                              // is_published
       JSON.stringify(seoMeta)            // seo_meta
