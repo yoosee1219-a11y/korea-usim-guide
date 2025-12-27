@@ -4,6 +4,7 @@
  *   안정적인 Unsplash 이미지로 교체합니다.
  */
 
+import 'dotenv/config';
 import { db } from '../server/storage/db.js';
 import { searchStockImages } from '../automation/services/image-service.js';
 
