@@ -66,7 +66,26 @@ export function verifyToken(token: string): any {
 }
 
 /**
- * 관리자 로그인 검증
+ * Authenticates admin user and generates JWT token
+ *
+ * Verifies the provided password against the stored admin password hash using Argon2.
+ * If authentication succeeds, generates and returns a JWT token valid for 24 hours.
+ *
+ * Security features:
+ * - Uses Argon2id hashing algorithm (OWASP recommended)
+ * - Falls back to default password only in development if ADMIN_PASSWORD_HASH not set
+ * - Returns null on authentication failure (constant-time to prevent timing attacks)
+ *
+ * @param password - Plain text password to verify
+ * @returns JWT token string if authentication succeeds, null if fails
+ * @throws Does not throw - returns null on any error for security
+ *
+ * @example
+ * const token = await authenticateAdmin("admin123");
+ * if (token) {
+ *   // Store token in session or send to client
+ *   res.cookie('authToken', token);
+ * }
  */
 export async function authenticateAdmin(password: string): Promise<string | null> {
   try {

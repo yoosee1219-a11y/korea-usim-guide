@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { verifyToken } from "../middleware/auth.js";
 import { getPlans, getPlanById, comparePlans, type PlanFilters } from "../services/planService.js";
+import { handleApiError, handleSuccess } from "../utils/errorHandler.js";
 
 const router = Router();
 
@@ -26,22 +27,9 @@ router.post("/", async (req, res) => {
     if (body.lang) filters.lang = body.lang; // Add language parameter
 
     const plans = await getPlans(filters);
-    res.json({ plans });
+    handleSuccess(res, { plans });
   } catch (error) {
-    console.error("Error fetching plans:", error);
-    // 에러 상세 정보 로깅 (프로덕션에서는 민감 정보 제외)
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    console.error("Error details:", {
-      message: errorMessage,
-      stack: errorStack,
-      filters,
-      body,
-    });
-    res.status(500).json({ 
-      message: "Failed to fetch plans",
-      error: process.env.NODE_ENV === "development" ? errorMessage : undefined
-    });
+    handleApiError(res, error, 'Failed to fetch plans');
   }
 });
 
@@ -51,14 +39,13 @@ router.post("/compare", async (req, res) => {
     const { plan_ids, lang } = req.body || {};
 
     if (!plan_ids || !Array.isArray(plan_ids) || plan_ids.length === 0) {
-      return res.status(400).json({ message: "plan_ids array is required" });
+      return res.status(400).json({ success: false, error: "plan_ids array is required" });
     }
 
     const plans = await comparePlans(plan_ids, lang);
-    res.json({ plans });
+    handleSuccess(res, { plans });
   } catch (error) {
-    console.error("Error comparing plans:", error);
-    res.status(500).json({ message: "Failed to compare plans" });
+    handleApiError(res, error, 'Failed to compare plans');
   }
 });
 
@@ -70,13 +57,12 @@ router.post("/:id", async (req, res) => {
     const plan = await getPlanById(id, lang);
 
     if (!plan) {
-      return res.status(404).json({ message: "Plan not found" });
+      return res.status(404).json({ success: false, error: "Plan not found" });
     }
 
-    res.json({ plan });
+    handleSuccess(res, { plan });
   } catch (error) {
-    console.error("Error fetching plan:", error);
-    res.status(500).json({ message: "Failed to fetch plan" });
+    handleApiError(res, error, 'Failed to fetch plan');
   }
 });
 

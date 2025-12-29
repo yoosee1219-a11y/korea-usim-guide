@@ -14,10 +14,24 @@ interface GeneratedContent {
 }
 
 /**
- * Gemini API로 블로그 콘텐츠 생성
- * @param keyword 타겟 키워드
- * @param seoData SEO 관련 데이터
- * @returns 생성된 콘텐츠
+ * Generates SEO-optimized blog content using Gemini AI
+ *
+ * Uses Gemini 2.5 Flash model to create comprehensive blog posts optimized for search engines.
+ * The generated content includes structured HTML, H2 headings, meta descriptions, and keyword optimization.
+ *
+ * @param keyword - Target keyword for content generation (e.g., "Korea SIM card")
+ * @param seoData - SEO metadata including search intent and CPC value
+ * @param seoData.searchIntent - User search intent: "informational", "transactional", "navigational"
+ * @param seoData.cpc - Cost per click in KRW, used to prioritize content quality
+ * @returns Generated content with title, excerpt, HTML content, H2 tags, keywords, and slug
+ * @throws Error if content generation fails, JSON parsing fails, or validation fails
+ *
+ * @example
+ * const content = await generateBlogContent("Korea SIM card", {
+ *   searchIntent: "informational",
+ *   cpc: 5000
+ * });
+ * console.log(content.title); // "Ultimate Guide to Korea SIM Cards in 2025"
  */
 export async function generateBlogContent(
   keyword: string,

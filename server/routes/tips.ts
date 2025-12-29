@@ -7,6 +7,7 @@ import {
   incrementTipViewCount,
   type TipFilters,
 } from "../services/tipService.js";
+import { handleApiError, handleSuccess } from "../utils/errorHandler.js";
 
 const router = Router();
 
@@ -17,19 +18,9 @@ const router = Router();
 router.post("/categories", async (req, res) => {
   try {
     const categories = await getTipCategories();
-    res.json({ categories });
+    handleSuccess(res, { categories });
   } catch (error) {
-    console.error("Error fetching tip categories:", error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    console.error("Error details:", {
-      message: errorMessage,
-      stack: errorStack,
-    });
-    res.status(500).json({ 
-      message: "Failed to fetch tip categories",
-      error: process.env.NODE_ENV === "development" ? errorMessage : undefined
-    });
+    handleApiError(res, error, 'Failed to fetch tip categories');
   }
 });
 
@@ -45,30 +36,10 @@ router.post("/", async (req, res) => {
     if (body.is_published !== undefined) filters.is_published = Boolean(body.is_published);
     if (body.language) filters.language = body.language;
 
-    console.log('🔍 [DEBUG] /api/tips - Received request:', { body, filters });
-
     const result = await getTips(filters);
-
-    console.log('✅ [DEBUG] /api/tips - Query result:', {
-      count: result.tips.length,
-      languages: Array.from(new Set(result.tips.map(t => t.language)))
-    });
-
-    res.json(result);
+    handleSuccess(res, result);
   } catch (error) {
-    console.error("Error fetching tips:", error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    console.error("Error details:", {
-      message: errorMessage,
-      stack: errorStack,
-      filters,
-      body,
-    });
-    res.status(500).json({
-      message: "Failed to fetch tips",
-      error: process.env.NODE_ENV === "development" ? errorMessage : undefined
-    });
+    handleApiError(res, error, 'Failed to fetch tips');
   }
 });
 
@@ -79,18 +50,10 @@ router.post("/slug/:slug", async (req, res) => {
     const body = req.body || {};
     const language = body.language || 'ko';
 
-    console.log('🔍 [DEBUG] /api/tips/slug/:slug - Received request:', { slug, body, language });
-
     const tip = await getTipBySlug(slug, language);
 
-    console.log('✅ [DEBUG] /api/tips/slug/:slug - Query result:', tip ? {
-      id: tip.id,
-      language: tip.language,
-      title: tip.title.substring(0, 50)
-    } : null);
-
     if (!tip) {
-      return res.status(404).json({ message: "Tip not found" });
+      return res.status(404).json({ success: false, error: "Tip not found" });
     }
 
     // 조회수 증가 (비동기, 에러 무시)
@@ -98,10 +61,9 @@ router.post("/slug/:slug", async (req, res) => {
       console.error("Error incrementing view count:", error);
     });
 
-    res.json({ tip });
+    handleSuccess(res, { tip });
   } catch (error) {
-    console.error("Error fetching tip:", error);
-    res.status(500).json({ message: "Failed to fetch tip" });
+    handleApiError(res, error, 'Failed to fetch tip');
   }
 });
 
@@ -112,7 +74,7 @@ router.post("/:id", async (req, res) => {
     const tip = await getTipById(id);
 
     if (!tip) {
-      return res.status(404).json({ message: "Tip not found" });
+      return res.status(404).json({ success: false, error: "Tip not found" });
     }
 
     // 조회수 증가 (비동기, 에러 무시)
@@ -120,10 +82,9 @@ router.post("/:id", async (req, res) => {
       console.error("Error incrementing view count:", error);
     });
 
-    res.json({ tip });
+    handleSuccess(res, { tip });
   } catch (error) {
-    console.error("Error fetching tip:", error);
-    res.status(500).json({ message: "Failed to fetch tip" });
+    handleApiError(res, error, 'Failed to fetch tip');
   }
 });
 

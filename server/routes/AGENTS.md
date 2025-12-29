@@ -139,10 +139,15 @@ res.status(400).json({
 });
 ```
 
-### Error Handling Template
-Location: server/routes/tips.ts:58-72
+### Error Handling - Standard Pattern (NEW)
+
+**Location**: server/utils/errorHandler.ts
+
+Use the standardized error handler utility for consistent error handling across all routes.
 
 ```typescript
+import { handleApiError, handleSuccess } from "../utils/errorHandler.js";
+
 router.post("/", async (req, res) => {
   try {
     const body = req.body || {};
@@ -158,22 +163,41 @@ router.post("/", async (req, res) => {
     // Process request
     const result = await getTips(filters);
 
-    // Return success
-    res.json({ success: true, data: result });
+    // Use standard success handler
+    handleSuccess(res, result);
 
   } catch (error) {
+    // Use standard error handler
+    handleApiError(res, error, 'Failed to fetch tips');
+  }
+});
+```
+
+**Benefits**:
+- Consistent error response format across all routes
+- Automatic status code determination based on error message
+- Development/production error detail handling
+- Centralized error logging
+
+**Error Status Code Rules**:
+- 404: Error message contains "not found"
+- 401: Error message contains "unauthorized" or "authentication"
+- 400: Error message contains "validation" or "invalid"
+- 500: All other errors (default)
+
+### Error Handling - Legacy Pattern (OLD)
+
+**Note**: This pattern is deprecated. Use the standard error handler instead.
+
+```typescript
+// OLD - Don't use this pattern for new code
+router.post("/", async (req, res) => {
+  try {
+    const result = await getTips(filters);
+    res.json({ success: true, data: result });
+  } catch (error) {
     console.error("Error fetching tips:", error);
-
     const errorMessage = error instanceof Error ? error.message : String(error);
-
-    // Log full error internally
-    console.error("Error details:", {
-      message: errorMessage,
-      stack: error instanceof Error ? error.stack : undefined,
-      body: req.body,
-    });
-
-    // Return sanitized error to client
     res.status(500).json({
       success: false,
       error: 'Failed to fetch tips',

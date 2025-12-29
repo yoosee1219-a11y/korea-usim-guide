@@ -73,7 +73,34 @@ export interface PlanFilters {
   lang?: string; // Language code (ko, en, vi, th, etc.)
 }
 
-// 요금제 목록 조회 (필터링 지원)
+/**
+ * Retrieves filtered list of mobile plans with carrier information
+ *
+ * Fetches plans from database with support for multilingual carrier names and comprehensive filtering.
+ * Automatically retries on connection timeouts. Returns active plans only.
+ *
+ * @param filters - Optional filtering parameters
+ * @param filters.carrier_id - Filter by carrier ID
+ * @param filters.dataMin - Minimum data amount in GB
+ * @param filters.dataMax - Maximum data amount in GB
+ * @param filters.priceMin - Minimum price in KRW
+ * @param filters.priceMax - Maximum price in KRW
+ * @param filters.plan_type - Plan type filter
+ * @param filters.payment_type - Payment type: 'prepaid' or 'postpaid'
+ * @param filters.airport_pickup - Filter by airport pickup availability
+ * @param filters.esim_support - Filter by eSIM support
+ * @param filters.is_popular - Filter by popular status
+ * @param filters.lang - Language code for carrier names (default: 'ko')
+ * @returns Array of plans with carrier information
+ * @throws Error if database query fails after retries
+ *
+ * @example
+ * const plans = await getPlans({
+ *   esim_support: true,
+ *   priceMax: 50000,
+ *   lang: 'en'
+ * });
+ */
 export async function getPlans(filters: PlanFilters = {}): Promise<Plan[]> {
   const conditions: string[] = [];
   const params: any[] = [];

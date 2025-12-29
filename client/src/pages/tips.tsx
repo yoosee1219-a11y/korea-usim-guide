@@ -20,8 +20,6 @@ export default function Tips() {
   const [filters, setFilters] = useState<TipFilters>({ page: 1, limit: 10 });
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
 
-  console.log('🔍 [DEBUG] Tips component - currentLanguage:', currentLanguage);
-
   const { data: tipsData, isLoading } = useTips({
     ...filters,
     category_id: selectedCategory,
@@ -35,11 +33,6 @@ export default function Tips() {
   const currentPage = tipsData?.page || 1;
   const limit = tipsData?.limit || 10;
   const totalPages = Math.ceil(total / limit);
-
-  console.log('🔍 [DEBUG] Tips component - Received tips:', {
-    count: tips.length,
-    languages: Array.from(new Set(tips.map(t => t.language)))
-  });
 
   // 카테고리 필터 변경
   const handleCategoryChange = (categoryId: string | undefined) => {

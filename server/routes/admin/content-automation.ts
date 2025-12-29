@@ -3,6 +3,7 @@ import { db } from "../../storage/db.js";
 import { requireAdminAuth } from "../../middleware/adminAuth.js";
 import { autoGenerateContent } from "../../../automation/workflows/content-automation.js";
 import { v2 } from '@google-cloud/translate';
+import { handleApiError, handleSuccess } from "../../utils/errorHandler.js";
 
 const router = Router();
 
@@ -61,8 +62,7 @@ router.post("/generate/:keywordId", async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Content generation error:', error);
-    res.status(500).json({ error: 'Failed to start content generation' });
+    handleApiError(res, error, 'Failed to start content generation');
   }
 });
 
@@ -98,8 +98,7 @@ router.post("/generate-batch", async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Batch generation error:', error);
-    res.status(500).json({ error: 'Failed to generate batch content' });
+    handleApiError(res, error, 'Failed to generate batch content');
   }
 });
 
@@ -147,8 +146,7 @@ router.get("/stats", async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Stats fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch stats' });
+    handleApiError(res, error, 'Failed to fetch stats');
   }
 });
 
@@ -177,8 +175,7 @@ router.get("/logs", async (req, res) => {
     res.json(result.rows);
 
   } catch (error) {
-    console.error('Logs fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch logs' });
+    handleApiError(res, error, 'Failed to fetch logs');
   }
 });
 
@@ -224,8 +221,7 @@ router.post("/retry/:keywordId", async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Retry error:', error);
-    res.status(500).json({ error: 'Failed to retry' });
+    handleApiError(res, error, 'Failed to retry');
   }
 });
 

@@ -95,7 +95,25 @@ export async function getTipCategories(): Promise<TipCategory[]> {
   }
 }
 
-// 꿀팁 목록 조회 (페이지네이션 지원)
+/**
+ * Fetches paginated list of tips with optional filtering
+ *
+ * Retrieves tips from the database with support for pagination, category filtering,
+ * and language selection. Automatically retries on connection timeouts.
+ *
+ * @param filters - Optional filtering and pagination parameters
+ * @param filters.category_id - Filter by category ID
+ * @param filters.page - Page number (default: 1)
+ * @param filters.limit - Items per page (default: 10)
+ * @param filters.is_published - Filter by published status (default: true)
+ * @param filters.language - Language code (default: 'ko')
+ * @returns Object containing tips array, total count, current page, and limit
+ * @throws Error if database query fails after retries
+ *
+ * @example
+ * const result = await getTips({ language: 'en', page: 2, limit: 20 });
+ * console.log(`Showing ${result.tips.length} of ${result.total} tips`);
+ */
 export async function getTips(filters: TipFilters = {}): Promise<{ tips: Tip[]; total: number; page: number; limit: number }> {
   const page = filters.page || 1;
   const limit = filters.limit || 10;
@@ -140,10 +158,6 @@ export async function getTips(filters: TipFilters = {}): Promise<{ tips: Tip[]; 
   `;
 
   params.push(limit, offset);
-
-  console.log('🔍 [DEBUG] getTips - SQL Query:', query);
-  console.log('🔍 [DEBUG] getTips - Parameters:', params);
-  console.log('🔍 [DEBUG] getTips - Filters:', filters);
 
   try {
     return await queryWithRetry(async () => {

@@ -14,9 +14,25 @@ interface AutomationResult {
 }
 
 /**
- * 콘텐츠 자동 생성 메인 워크플로우
- * @param keywordId 키워드 ID
- * @returns 생성 결과
+ * Automated content generation workflow using AI and SEO optimization
+ *
+ * Orchestrates the complete blog post generation process:
+ * 1. Fetches keyword data and SEO metadata
+ * 2. Generates content using Gemini AI
+ * 3. Validates content quality
+ * 4. Optimizes for SEO (slug, meta tags)
+ * 5. Creates multilingual translations
+ * 6. Publishes to database
+ *
+ * @param keywordId - Database ID of the target keyword
+ * @returns Result object containing success status, tip ID, slug, or error details
+ * @throws Error if content generation fails or validation fails
+ *
+ * @example
+ * const result = await autoGenerateContent("keyword-123");
+ * if (result.success) {
+ *   console.log(`Published: ${result.slug}`);
+ * }
  */
 export async function autoGenerateContent(keywordId: string): Promise<AutomationResult> {
   let generatedTipId: string | null = null;
