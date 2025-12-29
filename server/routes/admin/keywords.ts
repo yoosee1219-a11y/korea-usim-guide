@@ -202,6 +202,30 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+// DELETE - 일괄 키워드 삭제 (/:id보다 먼저 정의해야 함)
+router.delete("/batch", async (req, res) => {
+  try {
+    const { keywordIds } = req.body;
+
+    if (!Array.isArray(keywordIds) || keywordIds.length === 0) {
+      return res.status(400).json({ error: 'Invalid keyword IDs array' });
+    }
+
+    const placeholders = keywordIds.map((_, index) => `$${index + 1}`).join(', ');
+    const query = `DELETE FROM content_keywords WHERE id IN (${placeholders})`;
+
+    const result = await db.query(query, keywordIds);
+
+    res.json({
+      success: true,
+      deleted_count: result.rowCount || 0
+    });
+  } catch (error) {
+    console.error('Batch delete error:', error);
+    res.status(500).json({ error: 'Failed to delete keywords' });
+  }
+});
+
 // DELETE - 키워드 삭제
 router.delete("/:id", async (req, res) => {
   try {

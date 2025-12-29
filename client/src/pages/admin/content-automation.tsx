@@ -3,8 +3,9 @@ import { Link, useLocation } from 'wouter'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Play, RefreshCw, AlertCircle, CheckCircle, Clock, Zap, Settings, Calendar } from 'lucide-react'
+import { Play, RefreshCw, AlertCircle, CheckCircle, Clock, Zap, Settings, Calendar, Trash2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { Checkbox } from '@/components/ui/checkbox'
 
 interface Keyword {
   id: string
@@ -43,6 +44,7 @@ export default function ContentAutomation() {
   const [password, setPassword] = useState('')
   const [generating, setGenerating] = useState<Set<string>>(new Set())
   const [results, setResults] = useState<Map<string, GenerationResult>>(new Map())
+  const [selectedKeywords, setSelectedKeywords] = useState<Set<string>>(new Set())
   const [schedulerSettings, setSchedulerSettings] = useState({
     enabled: false,
     interval: 24, // hours
@@ -218,8 +220,81 @@ export default function ContentAutomation() {
     }
   }
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedKeywords(new Set(keywords.map(k => k.id)))
+    } else {
+      setSelectedKeywords(new Set())
+    }
+  }
+
+  const handleSelectKeyword = (keywordId: string, checked: boolean) => {
+    const newSelected = new Set(selectedKeywords)
+    if (checked) {
+      newSelected.add(keywordId)
+    } else {
+      newSelected.delete(keywordId)
+    }
+    setSelectedKeywords(newSelected)
+  }
+
+  const handleDeleteSelected = async () => {
+    if (selectedKeywords.size === 0) {
+      toast({
+        title: "선택 없음",
+        description: "삭제할 키워드를 선택해주세요.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (!confirm(`선택한 ${selectedKeywords.size}개의 키워드를 삭제하시겠습니까?`)) return
+
+    try {
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch('/api/admin/keywords/batch', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          keywordIds: Array.from(selectedKeywords)
+        })
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        toast({
+          title: "삭제 완료",
+          description: `${selectedKeywords.size}개의 키워드가 삭제되었습니다.`,
+        })
+        setSelectedKeywords(new Set())
+        fetchData()
+      } else {
+        toast({
+          title: "삭제 실패",
+          description: result.error || '알 수 없는 오류',
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error('Delete error:', error)
+      toast({
+        title: "오류 발생",
+        description: "삭제 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
+    }
+  }
+
   const handleBatchGenerate = async () => {
-    if (keywords.length === 0) {
+    const targetKeywords = selectedKeywords.size > 0
+      ? Array.from(selectedKeywords)
+      : keywords.map(k => k.id)
+
+    if (targetKeywords.length === 0) {
       toast({
         title: "키워드 없음",
         description: "생성할 키워드가 없습니다.",
@@ -228,9 +303,13 @@ export default function ContentAutomation() {
       return
     }
 
-    if (!confirm(`${keywords.length}개의 키워드로 콘텐츠를 생성하시겠습니까?`)) return
+    const message = selectedKeywords.size > 0
+      ? `선택한 ${targetKeywords.length}개의 키워드로 콘텐츠를 생성하시겠습니까?`
+      : `${targetKeywords.length}개의 키워드로 콘텐츠를 생성하시겠습니까?`
 
-    const keywordIds = keywords.map(k => k.id)
+    if (!confirm(message)) return
+
+    const keywordIds = targetKeywords
 
     try {
       const token = localStorage.getItem('adminToken')
@@ -461,20 +540,35 @@ export default function ContentAutomation() {
           <Card className="p-4">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h2 className="text-lg font-semibold mb-1">일괄 생성</h2>
+                <h2 className="text-lg font-semibold mb-1">일괄 작업</h2>
                 <p className="text-sm text-gray-600">
-                  대기 중인 {keywords.length}개 키워드를 한 번에 처리합니다.
+                  {selectedKeywords.size > 0 ? (
+                    <>선택한 <strong>{selectedKeywords.size}개</strong> 키워드를 처리합니다.</>
+                  ) : (
+                    <>대기 중인 <strong>{keywords.length}개</strong> 키워드를 한 번에 처리합니다.</>
+                  )}
                 </p>
               </div>
             </div>
-            <Button
-              onClick={handleBatchGenerate}
-              disabled={keywords.length === 0}
-              size="sm"
-            >
-              <Play className="w-4 h-4 mr-2" />
-              일괄 생성 시작
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleBatchGenerate}
+                disabled={keywords.length === 0}
+                size="sm"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                {selectedKeywords.size > 0 ? '선택 항목 생성' : '일괄 생성'}
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteSelected}
+                disabled={selectedKeywords.size === 0}
+                size="sm"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                선택 삭제
+              </Button>
+            </div>
           </Card>
         </div>
 
@@ -499,12 +593,25 @@ export default function ContentAutomation() {
 
         {!loading && keywords.length > 0 && (
           <Card>
-            <div className="p-4 border-b bg-gray-50">
-              <h2 className="text-lg font-semibold">대기 중인 키워드 ({keywords.length}개)</h2>
+            <div className="p-4 border-b bg-gray-50 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">
+                대기 중인 키워드 ({keywords.length}개)
+                {selectedKeywords.size > 0 && (
+                  <span className="ml-2 text-sm font-normal text-blue-600">
+                    ({selectedKeywords.size}개 선택됨)
+                  </span>
+                )}
+              </h2>
             </div>
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-4 py-3 text-left">
+                    <Checkbox
+                      checked={keywords.length > 0 && selectedKeywords.size === keywords.length}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     키워드
                   </th>
@@ -524,7 +631,13 @@ export default function ContentAutomation() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {keywords.map(keyword => (
-                  <tr key={keyword.id}>
+                  <tr key={keyword.id} className={selectedKeywords.has(keyword.id) ? 'bg-blue-50' : ''}>
+                    <td className="px-4 py-4">
+                      <Checkbox
+                        checked={selectedKeywords.has(keyword.id)}
+                        onCheckedChange={(checked) => handleSelectKeyword(keyword.id, checked as boolean)}
+                      />
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         {getPriorityIcon(keyword.priority)}
