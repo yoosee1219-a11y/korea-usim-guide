@@ -1,12 +1,11 @@
 import { Router } from "express";
-import { verifyToken } from "../middleware/auth.js";
 import { getPlans, getPlanById, comparePlans, type PlanFilters } from "../services/planService.js";
 import { handleApiError, handleSuccess } from "../utils/errorHandler.js";
 
 const router = Router();
 
-// 모든 라우트에 인증 미들웨어 적용
-router.use(verifyToken);
+// 공개 API - 인증 불필요
+// (모든 사용자가 요금제를 볼 수 있어야 함)
 
 // POST /api/plans - 요금제 목록 조회 (필터링 지원)
 router.post("/", async (req, res) => {
