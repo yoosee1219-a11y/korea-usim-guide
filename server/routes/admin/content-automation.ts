@@ -297,18 +297,20 @@ router.post("/run-scheduler", async (req, res) => {
       return res.json({ message: 'Scheduler is disabled', processed: 0 });
     }
 
-    // 마지막 실행 시간 확인
+    // 마지막 실행 날짜 확인 (하루에 한 번만 실행)
     const now = new Date();
+    const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
+
     if (settings.lastRun) {
       const lastRun = new Date(settings.lastRun);
-      const hoursSinceLastRun = (now.getTime() - lastRun.getTime()) / (1000 * 60 * 60);
+      const lastRunDate = lastRun.toISOString().split('T')[0]; // YYYY-MM-DD
 
-      if (hoursSinceLastRun < settings.interval) {
-        console.log(`⏱️ Too soon: ${hoursSinceLastRun.toFixed(1)}h since last run (interval: ${settings.interval}h)`);
+      if (lastRunDate === today) {
+        console.log(`⏱️ Already ran today: ${lastRunDate}`);
         return res.json({
-          message: 'Not enough time since last run',
-          hoursSinceLastRun: hoursSinceLastRun.toFixed(1),
-          nextRunIn: (settings.interval - hoursSinceLastRun).toFixed(1)
+          message: 'Already ran today',
+          lastRun: settings.lastRun,
+          nextRunDate: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
         });
       }
     }

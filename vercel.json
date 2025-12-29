@@ -7,7 +7,15 @@
   "crons": [
     {
       "path": "/api/admin/content-automation/run-scheduler",
-      "schedule": "0 9 * * *"
+      "schedule": "0 9 * * 1-5"
+    },
+    {
+      "path": "/api/admin/content-automation/run-scheduler",
+      "schedule": "0 14 * * 1-5"
+    },
+    {
+      "path": "/api/admin/content-automation/run-scheduler",
+      "schedule": "0 19 * * 1-5"
     }
   ],
   "headers": [
