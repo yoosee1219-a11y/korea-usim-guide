@@ -4,6 +4,12 @@
   "outputDirectory": "dist/public",
   "installCommand": "npm install",
   "framework": null,
+  "crons": [
+    {
+      "path": "/api/admin/content-automation/run-scheduler",
+      "schedule": "0 9 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
