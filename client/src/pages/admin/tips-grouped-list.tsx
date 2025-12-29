@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ChevronDown, ChevronRight, Globe, Trash2, Eye, EyeOff } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 interface Translation {
   id: string
@@ -29,6 +30,7 @@ interface GroupedTip {
 
 export default function TipsGroupedList() {
   const [, navigate] = useLocation()
+  const { toast } = useToast()
   const [groups, setGroups] = useState<GroupedTip[]>([])
   const [loading, setLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -62,11 +64,19 @@ export default function TipsGroupedList() {
         setIsAuthenticated(true)
         fetchGroupedTips()
       } else {
-        alert('잘못된 비밀번호입니다.')
+        toast({
+          title: "로그인 실패",
+          description: "잘못된 비밀번호입니다.",
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error('Login error:', error)
-      alert('로그인 중 오류가 발생했습니다.')
+      toast({
+        title: "오류 발생",
+        description: "로그인 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
     }
   }
 
@@ -129,7 +139,11 @@ export default function TipsGroupedList() {
 
   const handleBulkDelete = async () => {
     if (selectedTips.size === 0) {
-      alert('삭제할 항목을 선택해주세요.')
+      toast({
+        title: "선택 필요",
+        description: "삭제할 항목을 선택해주세요.",
+        variant: "destructive"
+      })
       return
     }
 
@@ -149,19 +163,34 @@ export default function TipsGroupedList() {
       if (response.ok) {
         setSelectedTips(new Set())
         fetchGroupedTips()
-        alert('삭제되었습니다.')
+        toast({
+          title: "삭제 완료",
+          description: "삭제되었습니다.",
+        })
       } else {
-        alert('삭제 실패')
+        toast({
+          title: "삭제 실패",
+          description: "삭제에 실패했습니다.",
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error('Bulk delete error:', error)
-      alert('삭제 중 오류가 발생했습니다.')
+      toast({
+        title: "오류 발생",
+        description: "삭제 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
     }
   }
 
   const handleBulkPublish = async (publish: boolean) => {
     if (selectedTips.size === 0) {
-      alert('발행 상태를 변경할 항목을 선택해주세요.')
+      toast({
+        title: "선택 필요",
+        description: "발행 상태를 변경할 항목을 선택해주세요.",
+        variant: "destructive"
+      })
       return
     }
 
@@ -182,13 +211,24 @@ export default function TipsGroupedList() {
       if (response.ok) {
         setSelectedTips(new Set())
         fetchGroupedTips()
-        alert(publish ? '발행되었습니다.' : '발행 취소되었습니다.')
+        toast({
+          title: "상태 변경 완료",
+          description: publish ? '발행되었습니다.' : '발행 취소되었습니다.',
+        })
       } else {
-        alert('상태 변경 실패')
+        toast({
+          title: "상태 변경 실패",
+          description: "상태 변경에 실패했습니다.",
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error('Bulk publish error:', error)
-      alert('상태 변경 중 오류가 발생했습니다.')
+      toast({
+        title: "오류 발생",
+        description: "상태 변경 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
     }
   }
 

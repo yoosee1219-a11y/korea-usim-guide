@@ -324,7 +324,8 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
     },
     
     // 코드 블록 스타일링
-    code: ({ node, inline, children, ...props }) => {
+    code: ({ node, className, children, ...props }) => {
+      const inline = !className?.includes('language-');
       if (inline) {
         return (
           <code

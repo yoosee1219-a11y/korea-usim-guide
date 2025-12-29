@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react'
 import { useLocation } from 'wouter'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { useToast } from '@/hooks/use-toast'
 
 export default function AdminPlanList() {
   const [, navigate] = useLocation()
+  const { toast } = useToast()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [password, setPassword] = useState('')
   const [plans, setPlans] = useState<any[]>([])
@@ -34,11 +36,19 @@ export default function AdminPlanList() {
         setIsAuthenticated(true)
         fetchPlans()
       } else {
-        alert('비밀번호가 올바르지 않습니다.')
+        toast({
+          title: "로그인 실패",
+          description: "비밀번호가 올바르지 않습니다.",
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error('Login error:', error)
-      alert('로그인 중 오류가 발생했습니다.')
+      toast({
+        title: "오류 발생",
+        description: "로그인 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
     }
   }
 
@@ -82,14 +92,21 @@ export default function AdminPlanList() {
       })
 
       if (response.ok) {
-        alert('삭제되었습니다.')
+        toast({
+          title: "삭제 완료",
+          description: "삭제되었습니다.",
+        })
         fetchPlans()
       } else {
         throw new Error('Delete failed')
       }
     } catch (error) {
       console.error('Delete error:', error)
-      alert('삭제 중 오류가 발생했습니다.')
+      toast({
+        title: "삭제 실패",
+        description: "삭제 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
     }
   }
 

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useRoute } from 'wouter'
 import PlanEditor from '@/components/admin/PlanEditor'
+import { useToast } from '@/hooks/use-toast'
 
 export default function EditPlan() {
   const [, navigate] = useLocation()
   const [, params] = useRoute('/admin/plans/edit/:id')
+  const { toast } = useToast()
   const [planData, setPlanData] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -44,13 +46,21 @@ export default function EditPlan() {
       })
 
       if (response.ok) {
-        alert('저장되었습니다!')
+        toast({
+          title: "성공",
+          description: "저장되었습니다!",
+        })
         navigate('/admin/plans')
       } else {
         throw new Error('Save failed')
       }
     } catch (error) {
       console.error('Save error:', error)
+      toast({
+        title: "저장 실패",
+        description: "저장 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
       throw error
     }
   }

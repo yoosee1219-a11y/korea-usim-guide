@@ -41,6 +41,14 @@ interface BlogEditorProps {
     title_en?: string
     title_vi?: string
     title_th?: string
+    title_tl?: string
+    title_uz?: string
+    title_ne?: string
+    title_mn?: string
+    title_id?: string
+    title_my?: string
+    title_zh?: string
+    title_ru?: string
     content_ko?: string
     content_en?: string
     content_vi?: string
@@ -49,6 +57,14 @@ interface BlogEditorProps {
     excerpt_en?: string
     excerpt_vi?: string
     excerpt_th?: string
+    excerpt_tl?: string
+    excerpt_uz?: string
+    excerpt_ne?: string
+    excerpt_mn?: string
+    excerpt_id?: string
+    excerpt_my?: string
+    excerpt_zh?: string
+    excerpt_ru?: string
     slug?: string
     category?: string
     tags?: string[]

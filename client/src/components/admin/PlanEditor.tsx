@@ -170,7 +170,7 @@ export default function PlanEditor({ initialData, onSave, onCancel }: PlanEditor
       }
 
       // Process feature translations
-      const featureResults = results.filter(r => r.type === 'feature')
+      const featureResults = results.filter(r => r.type === 'feature') as Array<{ type: string; index: number; data: any }>
       const translatedFeatures = {
         en: [] as string[],
         vi: [] as string[],

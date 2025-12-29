@@ -151,8 +151,8 @@ export default function TipDetail() {
   if (articleStructuredData) structuredDataArray.push(articleStructuredData);
   if (howToSchema) structuredDataArray.push(howToSchema);
   if (faqSchema) structuredDataArray.push(faqSchema);
-  
-  const combinedStructuredData = structuredDataArray.length > 0 ? structuredDataArray : null;
+
+  const combinedStructuredData = structuredDataArray.length > 0 ? structuredDataArray : undefined;
 
   return (
     <Layout>

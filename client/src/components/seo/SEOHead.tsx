@@ -8,6 +8,8 @@ interface SEOHeadProps {
   ogType?: "website" | "article" | "product";
   canonical?: string;
   structuredData?: object;
+  hreflangUrls?: Array<{ lang: string; url: string }>; // 다국어 SEO
+  currentLanguage?: string;
 }
 
 export function SEOHead({
@@ -18,6 +20,8 @@ export function SEOHead({
   ogType = "website",
   canonical,
   structuredData,
+  hreflangUrls,
+  currentLanguage = 'ko',
 }: SEOHeadProps) {
   useEffect(() => {
     // Title 업데이트
@@ -64,6 +68,45 @@ export function SEOHead({
       canonicalLink.href = canonical;
     }
 
+    // hreflang 태그 추가 (다국어 SEO)
+    // 기존 hreflang 태그 모두 제거
+    const existingHreflang = document.querySelectorAll('link[rel="alternate"][hreflang]');
+    existingHreflang.forEach(link => link.remove());
+
+    if (hreflangUrls && hreflangUrls.length > 0) {
+      hreflangUrls.forEach(({ lang, url }) => {
+        const link = document.createElement('link');
+        link.rel = 'alternate';
+        link.hreflang = lang;
+        link.href = url;
+        document.head.appendChild(link);
+      });
+
+      // x-default 추가 (영어를 기본으로)
+      const defaultLink = document.createElement('link');
+      defaultLink.rel = 'alternate';
+      defaultLink.hreflang = 'x-default';
+      defaultLink.href = hreflangUrls.find(u => u.lang === 'en')?.url || hreflangUrls[0].url;
+      document.head.appendChild(defaultLink);
+    }
+
+    // OG locale 업데이트 (현재 언어에 맞게)
+    const localeMap: Record<string, string> = {
+      ko: 'ko_KR',
+      en: 'en_US',
+      vi: 'vi_VN',
+      th: 'th_TH',
+      tl: 'tl_PH',
+      uz: 'uz_UZ',
+      ne: 'ne_NP',
+      mn: 'mn_MN',
+      id: 'id_ID',
+      my: 'my_MM',
+      zh: 'zh_CN',
+      ru: 'ru_RU',
+    };
+    updateMetaTag("property", "og:locale", localeMap[currentLanguage] || 'ko_KR');
+
     // Structured Data (JSON-LD) 추가
     if (structuredData) {
       // 기존 구조화된 데이터 스크립트 태그 모두 제거
@@ -82,7 +125,7 @@ export function SEOHead({
         document.head.appendChild(scriptTag);
       });
     }
-  }, [title, description, keywords, ogImage, canonical, structuredData]);
+  }, [title, description, keywords, ogImage, canonical, structuredData, hreflangUrls, currentLanguage]);
 
   return null; // 이 컴포넌트는 렌더링하지 않음
 }

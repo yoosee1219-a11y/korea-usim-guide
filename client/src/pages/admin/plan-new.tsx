@@ -1,8 +1,10 @@
 import { useLocation } from 'wouter'
 import PlanEditor from '@/components/admin/PlanEditor'
+import { useToast } from '@/hooks/use-toast'
 
 export default function NewPlan() {
   const [, navigate] = useLocation()
+  const { toast } = useToast()
 
   const handleSave = async (data: any) => {
     try {
@@ -17,13 +19,21 @@ export default function NewPlan() {
       })
 
       if (response.ok) {
-        alert('저장되었습니다!')
+        toast({
+          title: "성공",
+          description: "저장되었습니다!",
+        })
         navigate('/admin/plans')
       } else {
         throw new Error('Save failed')
       }
     } catch (error) {
       console.error('Save error:', error)
+      toast({
+        title: "저장 실패",
+        description: "저장 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
       throw error
     }
   }

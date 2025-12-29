@@ -1,6 +1,7 @@
 import { type Server } from "node:http";
 
 import express, { type Express, type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "./routes.js";
 
 export function log(message: string, source = "express") {
@@ -15,6 +16,16 @@ export function log(message: string, source = "express") {
 }
 
 export const app = express();
+
+// CORS configuration
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production'
+    ? ['https://koreausimguide.com']
+    : ['http://localhost:5173', 'http://localhost:5000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 declare module 'http' {
   interface IncomingMessage {

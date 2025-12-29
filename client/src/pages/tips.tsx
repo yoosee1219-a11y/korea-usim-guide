@@ -38,7 +38,7 @@ export default function Tips() {
 
   console.log('🔍 [DEBUG] Tips component - Received tips:', {
     count: tips.length,
-    languages: [...new Set(tips.map(t => t.language))]
+    languages: Array.from(new Set(tips.map(t => t.language)))
   });
 
   // 카테고리 필터 변경

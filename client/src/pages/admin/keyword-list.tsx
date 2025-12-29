@@ -80,11 +80,19 @@ export default function KeywordList() {
         fetchKeywords()
         fetchStats()
       } else {
-        alert('잘못된 비밀번호입니다.')
+        toast({
+          title: "로그인 실패",
+          description: "잘못된 비밀번호입니다.",
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error('Login error:', error)
-      alert('로그인 중 오류가 발생했습니다.')
+      toast({
+        title: "오류 발생",
+        description: "로그인 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
     }
   }
 
@@ -166,13 +174,24 @@ export default function KeywordList() {
         })
         fetchKeywords()
         fetchStats()
-        alert('키워드가 추가되었습니다.')
+        toast({
+          title: "성공",
+          description: "키워드가 추가되었습니다.",
+        })
       } else {
-        alert('키워드 추가 실패')
+        toast({
+          title: "추가 실패",
+          description: "키워드 추가에 실패했습니다.",
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error('Add keyword error:', error)
-      alert('키워드 추가 중 오류가 발생했습니다.')
+      toast({
+        title: "오류 발생",
+        description: "키워드 추가 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
     }
   }
 

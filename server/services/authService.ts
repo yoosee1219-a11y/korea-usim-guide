@@ -1,8 +1,11 @@
 import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
 
-// JWT Secret - 실제 프로덕션에서는 환경변수로 관리해야 합니다
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
+// JWT Secret - 환경변수 필수
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = '24h'; // 24시간
 
 // 관리자 비밀번호 해시 (실제로는 DB에 저장해야 하지만, 단순화를 위해 환경변수 사용)

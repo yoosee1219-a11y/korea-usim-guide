@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { getOptimizedImageUrl, generateSrcSet } from '@/lib/imageUtils';
 import { cn } from '@/lib/utils';
 
-interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+interface OptimizedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src'> {
   src: string | null | undefined;
   alt: string;
   width?: number;

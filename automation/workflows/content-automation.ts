@@ -155,7 +155,9 @@ export async function autoGenerateContent(keywordId: string): Promise<Automation
 
     // [10] 다국어 번역 (11개 언어로 번역)
     console.log(`\n[10/11] Translating to 11 languages...`);
-    await translateTip(generatedTipId, tipResult.rows[0]);
+    if (generatedTipId) {
+      await translateTip(generatedTipId, tipResult.rows[0]);
+    }
     console.log(`✅ Translations completed`);
 
     // [11] 키워드 테이블 업데이트
@@ -182,7 +184,7 @@ export async function autoGenerateContent(keywordId: string): Promise<Automation
 
     return {
       success: true,
-      tipId: generatedTipId,
+      tipId: generatedTipId || undefined,
       slug: finalSlug
     };
 

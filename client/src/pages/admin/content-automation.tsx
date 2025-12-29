@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Play, RefreshCw, AlertCircle, CheckCircle, Clock, Zap, Settings, Calendar } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 interface Keyword {
   id: string
@@ -34,6 +35,7 @@ interface GenerationResult {
 
 export default function ContentAutomation() {
   const [, navigate] = useLocation()
+  const { toast } = useToast()
   const [keywords, setKeywords] = useState<Keyword[]>([])
   const [stats, setStats] = useState<AutomationStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -74,11 +76,19 @@ export default function ContentAutomation() {
         setIsAuthenticated(true)
         fetchData()
       } else {
-        alert('잘못된 비밀번호입니다.')
+        toast({
+          title: "로그인 실패",
+          description: "잘못된 비밀번호입니다.",
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error('Login error:', error)
-      alert('로그인 중 오류가 발생했습니다.')
+      toast({
+        title: "오류 발생",
+        description: "로그인 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
     }
   }
 
@@ -135,15 +145,26 @@ export default function ContentAutomation() {
       })
 
       if (response.ok) {
-        alert('스케줄러 설정이 저장되었습니다.')
+        toast({
+          title: "성공",
+          description: "스케줄러 설정이 저장되었습니다.",
+        })
         setShowSchedulerModal(false)
         fetchData()
       } else {
-        alert('스케줄러 설정 저장 실패')
+        toast({
+          title: "저장 실패",
+          description: "스케줄러 설정 저장에 실패했습니다.",
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error('Save scheduler error:', error)
-      alert('스케줄러 설정 저장 중 오류가 발생했습니다.')
+      toast({
+        title: "오류 발생",
+        description: "스케줄러 설정 저장 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
     }
   }
 
@@ -168,17 +189,28 @@ export default function ContentAutomation() {
       setResults(newResults)
 
       if (response.ok) {
-        alert(`"${keyword}" 콘텐츠 생성이 시작되었습니다.`)
+        toast({
+          title: "생성 시작",
+          description: `"${keyword}" 콘텐츠 생성이 시작되었습니다.`,
+        })
         // Refresh after a delay to show updated status
         setTimeout(() => {
           fetchData()
         }, 2000)
       } else {
-        alert(`생성 실패: ${result.error || '알 수 없는 오류'}`)
+        toast({
+          title: "생성 실패",
+          description: result.error || '알 수 없는 오류',
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error('Generation error:', error)
-      alert('콘텐츠 생성 중 오류가 발생했습니다.')
+      toast({
+        title: "오류 발생",
+        description: "콘텐츠 생성 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
     } finally {
       const newGenerating = new Set(generating)
       newGenerating.delete(keywordId)
@@ -188,7 +220,11 @@ export default function ContentAutomation() {
 
   const handleBatchGenerate = async () => {
     if (keywords.length === 0) {
-      alert('생성할 키워드가 없습니다.')
+      toast({
+        title: "키워드 없음",
+        description: "생성할 키워드가 없습니다.",
+        variant: "destructive"
+      })
       return
     }
 
@@ -213,14 +249,25 @@ export default function ContentAutomation() {
       const result = await response.json()
 
       if (response.ok) {
-        alert(`일괄 생성이 시작되었습니다. (${result.scheduled_count}개 예약됨)`)
+        toast({
+          title: "일괄 생성 시작",
+          description: `일괄 생성이 시작되었습니다. (${result.scheduled_count}개 예약됨)`,
+        })
         fetchData()
       } else {
-        alert(`일괄 생성 실패: ${result.error || '알 수 없는 오류'}`)
+        toast({
+          title: "일괄 생성 실패",
+          description: result.error || '알 수 없는 오류',
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error('Batch generation error:', error)
-      alert('일괄 생성 중 오류가 발생했습니다.')
+      toast({
+        title: "오류 발생",
+        description: "일괄 생성 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
     }
   }
 
@@ -239,14 +286,25 @@ export default function ContentAutomation() {
       const result = await response.json()
 
       if (response.ok) {
-        alert('재시도가 시작되었습니다.')
+        toast({
+          title: "재시도 시작",
+          description: "재시도가 시작되었습니다.",
+        })
         fetchData()
       } else {
-        alert(`재시도 실패: ${result.error || '알 수 없는 오류'}`)
+        toast({
+          title: "재시도 실패",
+          description: result.error || '알 수 없는 오류',
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error('Retry error:', error)
-      alert('재시도 중 오류가 발생했습니다.')
+      toast({
+        title: "오류 발생",
+        description: "재시도 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
     }
   }
 

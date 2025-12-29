@@ -51,7 +51,7 @@ router.post("/", async (req, res) => {
 
     console.log('✅ [DEBUG] /api/tips - Query result:', {
       count: result.tips.length,
-      languages: [...new Set(result.tips.map(t => t.language))]
+      languages: Array.from(new Set(result.tips.map(t => t.language)))
     });
 
     res.json(result);
