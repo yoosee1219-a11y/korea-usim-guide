@@ -45,6 +45,7 @@ export default function ContentAutomation() {
   const [generating, setGenerating] = useState<Set<string>>(new Set())
   const [results, setResults] = useState<Map<string, GenerationResult>>(new Map())
   const [selectedKeywords, setSelectedKeywords] = useState<Set<string>>(new Set())
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'generating' | 'published' | 'failed'>('pending')
   const [schedulerSettings, setSchedulerSettings] = useState({
     enabled: false,
     interval: 24, // hours
@@ -60,7 +61,7 @@ export default function ContentAutomation() {
     } else {
       setLoading(false)
     }
-  }, [])
+  }, [statusFilter])
 
   // 자동 새로고침 (5초마다) - 키워드가 있을 때만
   useEffect(() => {
@@ -109,8 +110,12 @@ export default function ContentAutomation() {
     try {
       const token = localStorage.getItem('adminToken')
 
+      const keywordsUrl = statusFilter === 'all'
+        ? '/api/admin/keywords'
+        : `/api/admin/keywords?status=${statusFilter}`
+
       const [keywordsRes, statsRes, schedulerRes] = await Promise.all([
-        fetch('/api/admin/keywords?status=pending', {
+        fetch(keywordsUrl, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
         fetch('/api/admin/content-automation/stats', {
@@ -519,6 +524,45 @@ export default function ContentAutomation() {
           </div>
         )}
 
+        {/* Status Filter Tabs */}
+        <div className="flex gap-2 mb-6">
+          <Button
+            variant={statusFilter === 'all' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setStatusFilter('all')}
+          >
+            전체 ({stats?.total_keywords || 0})
+          </Button>
+          <Button
+            variant={statusFilter === 'pending' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setStatusFilter('pending')}
+          >
+            대기 중 ({stats?.pending_count || 0})
+          </Button>
+          <Button
+            variant={statusFilter === 'generating' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setStatusFilter('generating')}
+          >
+            생성 중
+          </Button>
+          <Button
+            variant={statusFilter === 'published' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setStatusFilter('published')}
+          >
+            발행됨 ({stats?.published_count || 0})
+          </Button>
+          <Button
+            variant={statusFilter === 'failed' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setStatusFilter('failed')}
+          >
+            실패 ({stats?.failed_count || 0})
+          </Button>
+        </div>
+
         {/* Scheduler & Batch Actions */}
         <div className="grid grid-cols-2 gap-6 mb-6">
           <Card className="p-4">
@@ -606,7 +650,11 @@ export default function ContentAutomation() {
           <Card>
             <div className="p-4 border-b bg-gray-50 flex items-center justify-between">
               <h2 className="text-lg font-semibold">
-                대기 중인 키워드 ({keywords.length}개)
+                {statusFilter === 'all' && `전체 키워드 (${keywords.length}개)`}
+                {statusFilter === 'pending' && `대기 중인 키워드 (${keywords.length}개)`}
+                {statusFilter === 'generating' && `생성 중인 키워드 (${keywords.length}개)`}
+                {statusFilter === 'published' && `발행된 키워드 (${keywords.length}개)`}
+                {statusFilter === 'failed' && `실패한 키워드 (${keywords.length}개)`}
                 {selectedKeywords.size > 0 && (
                   <span className="ml-2 text-sm font-normal text-blue-600">
                     ({selectedKeywords.size}개 선택됨)
