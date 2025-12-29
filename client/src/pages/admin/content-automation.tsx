@@ -62,6 +62,17 @@ export default function ContentAutomation() {
     }
   }, [])
 
+  // 자동 새로고침 (5초마다) - 키워드가 있을 때만
+  useEffect(() => {
+    if (!isAuthenticated || keywords.length === 0) return
+
+    const interval = setInterval(() => {
+      fetchData()
+    }, 5000) // 5초마다 상태 확인
+
+    return () => clearInterval(interval)
+  }, [isAuthenticated, keywords.length])
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
 
