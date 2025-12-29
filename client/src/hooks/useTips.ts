@@ -58,7 +58,8 @@ export function useTips(filters: TipFilters = {}) {
   return useQuery<TipsResponse>({
     queryKey: ["tips", filters],
     queryFn: async () => {
-      return await apiPost<TipsResponse>("/tips", filters);
+      const response = await apiPost<{ success: boolean; data: TipsResponse }>("/tips", filters);
+      return response.data;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10,   // 10 minutes garbage collection
@@ -71,8 +72,8 @@ export function useTip(tipId: string) {
   return useQuery<Tip>({
     queryKey: ["tip", tipId],
     queryFn: async () => {
-      const data = await apiPost<TipResponse>(`/tips/${tipId}`, {});
-      return data.tip;
+      const response = await apiPost<{ success: boolean; data: TipResponse }>(`/tips/${tipId}`, {});
+      return response.data.tip;
     },
     enabled: !!tipId,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -86,8 +87,8 @@ export function useTipBySlug(slug: string, language?: LanguageCode) {
   return useQuery<Tip>({
     queryKey: ["tip-slug", slug, language],
     queryFn: async () => {
-      const data = await apiPost<TipResponse>(`/tips/slug/${slug}`, { language });
-      return data.tip;
+      const response = await apiPost<{ success: boolean; data: TipResponse }>(`/tips/slug/${slug}`, { language });
+      return response.data.tip;
     },
     enabled: !!slug,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -101,8 +102,8 @@ export function useTipCategories() {
   return useQuery<TipCategory[]>({
     queryKey: ["tip-categories"],
     queryFn: async () => {
-      const data = await apiPost<CategoriesResponse>("/tips/categories", {});
-      return data.categories;
+      const response = await apiPost<{ success: boolean; data: CategoriesResponse }>("/tips/categories", {});
+      return response.data.categories;
     },
     staleTime: 1000 * 60 * 60, // 1시간
   });

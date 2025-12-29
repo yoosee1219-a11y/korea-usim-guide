@@ -64,8 +64,8 @@ export function usePlans(filters: PlanFilters = {}) {
   return useQuery<Plan[]>({
     queryKey: ["plans", filtersWithLang],
     queryFn: async () => {
-      const data = await apiPost<PlansResponse>("/plans", filtersWithLang);
-      return data.plans;
+      const response = await apiPost<{ success: boolean; data: PlansResponse }>("/plans", filtersWithLang);
+      return response.data.plans;
     },
     staleTime: 1000 * 60 * 10, // 10분 (5분 → 10분으로 증가)
     gcTime: 1000 * 60 * 30, // 30분 (이전 cacheTime, 가비지 컬렉션 시간)
@@ -80,8 +80,8 @@ export function usePlan(planId: string) {
   return useQuery<Plan>({
     queryKey: ["plan", planId, currentLanguage],
     queryFn: async () => {
-      const data = await apiPost<PlanResponse>(`/plans/${planId}`, { lang: currentLanguage });
-      return data.plan;
+      const response = await apiPost<{ success: boolean; data: PlanResponse }>(`/plans/${planId}`, { lang: currentLanguage });
+      return response.data.plan;
     },
     enabled: !!planId,
     staleTime: 1000 * 60 * 10, // 10분
@@ -97,11 +97,11 @@ export function useComparePlans(planIds: string[]) {
   return useQuery<Plan[]>({
     queryKey: ["compare-plans", planIds.join(","), currentLanguage],
     queryFn: async () => {
-      const data = await apiPost<ComparePlansResponse>("/plans/compare", {
+      const response = await apiPost<{ success: boolean; data: ComparePlansResponse }>("/plans/compare", {
         plan_ids: planIds,
         lang: currentLanguage,
       });
-      return data.plans;
+      return response.data.plans;
     },
     enabled: planIds.length > 0,
     staleTime: 1000 * 60 * 5, // 5분 (비교는 자주 변경될 수 있음)
