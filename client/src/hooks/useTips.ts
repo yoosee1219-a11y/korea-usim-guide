@@ -60,7 +60,10 @@ export function useTips(filters: TipFilters = {}) {
     queryFn: async () => {
       return await apiPost<TipsResponse>("/tips", filters);
     },
-    staleTime: 1000 * 60 * 5, // 5분
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10,   // 10 minutes garbage collection
+    refetchOnWindowFocus: false, // Prevent refetch on window focus
+    refetchOnMount: false, // Use cache on mount
   });
 }
 
@@ -72,6 +75,10 @@ export function useTip(tipId: string) {
       return data.tip;
     },
     enabled: !!tipId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10,   // 10 minutes garbage collection
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 }
 
@@ -83,6 +90,10 @@ export function useTipBySlug(slug: string, language?: LanguageCode) {
       return data.tip;
     },
     enabled: !!slug,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10,   // 10 minutes garbage collection
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 }
 
