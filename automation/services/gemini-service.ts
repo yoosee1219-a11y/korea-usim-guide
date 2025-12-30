@@ -43,7 +43,7 @@ export async function generateBlogContent(
       temperature: 0.7,        // 창의성 조절 (0.7 = 균형)
       topK: 40,
       topP: 0.95,
-      maxOutputTokens: 8192,   // 최대 출력 길이
+      maxOutputTokens: 32768,  // 증가: 8192 → 32768 (JSON 잘림 방지)
     }
   });
 
@@ -56,6 +56,7 @@ export async function generateBlogContent(
     const response = result.response.text();
 
     console.log(`✅ Content generated successfully`);
+    console.log(`📏 Response length: ${response.length} characters`);
 
     // JSON 파싱 (```json ... ``` 제거)
     // 여러 패턴 시도: 1) ```json...``` 2) ```json... (closing 없음) 3) { ... }
@@ -86,7 +87,36 @@ export async function generateBlogContent(
       }
     }
 
-    const content = JSON.parse(jsonContent);
+    // HTML 속성의 큰따옴표를 작은따옴표로 변환 (JSON 파싱 오류 방지)
+    // Gemini가 prompt 무시하고 큰따옴표 사용하는 문제 해결
+    // 패턴: attribute="value" → attribute='value'
+    jsonContent = jsonContent.replace(/([\w-]+)="([^"]*)"/g, "$1='$2'");
+
+    let content;
+    try {
+      content = JSON.parse(jsonContent);
+    } catch (parseError) {
+      // JSON 파싱 실패 시 디버깅 정보 출력
+      console.error('❌ JSON parsing failed!');
+      console.error('Error:', parseError instanceof Error ? parseError.message : String(parseError));
+      console.error('JSON preview (first 1000 chars):', jsonContent.substring(0, 1000));
+      console.error('JSON around error position (if available):');
+
+      // 에러 위치 찾기
+      const match = (parseError instanceof Error ? parseError.message : '').match(/position (\d+)/);
+      if (match) {
+        const pos = parseInt(match[1]);
+        const start = Math.max(0, pos - 200);
+        const end = Math.min(jsonContent.length, pos + 200);
+        console.error(`Context around error (±200 chars):`);
+        console.error(`...${jsonContent.substring(start, end)}...`);
+
+        // 문제가 되는 문자 확인
+        console.error(`\nCharacter at error position: "${jsonContent.charAt(pos)}" (code: ${jsonContent.charCodeAt(pos)})`);
+      }
+
+      throw parseError;
+    }
 
     // 디버깅: 생성된 콘텐츠 구조 확인
     console.log('📝 Generated content structure:');
@@ -222,17 +252,23 @@ function createBlogPrompt(keyword: string, seoData: any): string {
 ## 5. 출력 형식
 반드시 아래 JSON 형식으로 출력하세요:
 
+**CRITICAL: HTML 속성에는 절대로 큰따옴표(")를 사용하지 마세요! 반드시 작은따옴표(')만 사용하세요!**
+
 \`\`\`json
 {
   "title": "타겟 키워드 + 완벽 가이드/총정리/방법 (60자 이내)",
   "excerpt": "문제 상황 + 해결 방법 요약 (150자 이내, 클릭 유도)",
-  "content": "HTML 형식의 본문 내용 (h2, h3, p, ul, ol, table, a 태그 사용, 최소 3000자)",
+  "content": "HTML 형식의 본문 내용 (h2, h3, p, ul, ol, table, a 태그 사용, 최소 3000자) - HTML 속성은 작은따옴표만 사용!",
   "h2_tags": ["H2 태그 1", "H2 태그 2", "...", "최소 5-8개"],
   "keywords": ["키워드1", "키워드2", "...", "5-10개"],
   "slug_suggestion": "url-friendly-slug",
   "thumbnail_suggestion": "섬네일 이미지 주제 설명 (영어)"
 }
 \`\`\`
+
+**예시 (올바른 HTML 속성 작성법):**
+- ✅ 올바름: <a href='https://example.com' target='_blank'>링크</a>
+- ❌ 잘못됨: <a href="https://example.com" target="_blank">링크</a>
 
 ## 6. HTML 콘텐츠 작성 세부 가이드
 - <h2>로 주요 섹션 구분 (최소 5-8개)
