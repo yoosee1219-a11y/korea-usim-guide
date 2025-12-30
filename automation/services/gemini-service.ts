@@ -181,7 +181,7 @@ function createBlogPrompt(keyword: string, seoData: any): string {
 
 각 단계마다:
 - 실용적이고 구체적인 정보 (가격, 주소, 전화번호, URL)
-- **공식 사이트 링크 반드시 포함** (예: <a href="https://www.hikorea.go.kr" target="_blank" rel="noopener noreferrer">하이코리아 공식 사이트</a>)
+- **공식 사이트 링크 반드시 포함** (예: <a href='https://www.hikorea.go.kr' target='_blank' rel='noopener noreferrer'>하이코리아 공식 사이트</a>)
 - 표, 리스트, 예시 적극 활용
 - 2025년 최신 정보 반영
 - 실패 사례와 주의사항 포함
@@ -204,7 +204,8 @@ function createBlogPrompt(keyword: string, seoData: any): string {
 
 ## 3. 외부 링크 삽입 규칙 (매우 중요!)
 - 공식 정부/기관 사이트 링크를 **문맥 안에 자연스럽게 삽입**
-- 링크 형식: <a href="[URL]" target="_blank" rel="noopener noreferrer">[설명 텍스트]</a>
+- 링크 형식: <a href='[URL]' target='_blank' rel='noopener noreferrer'>[설명 텍스트]</a>
+- **중요**: href 속성은 반드시 작은따옴표(')를 사용하세요
 - 예시:
   * 하이코리아: https://www.hikorea.go.kr
   * 법무부 출입국: https://www.immigration.go.kr
@@ -240,7 +241,8 @@ function createBlogPrompt(keyword: string, seoData: any): string {
 - <ul>/<ol>로 리스트 작성 (단계, 항목 정리)
 - <table>로 비교 정보 표현 (요금제, 서류 비교 등)
 - <strong>로 핵심 키워드 강조
-- <a href="..." target="_blank" rel="noopener noreferrer">로 외부 링크 삽입
+- <a href='...' target='_blank' rel='noopener noreferrer'>로 외부 링크 삽입
+- **중요**: HTML 속성은 반드시 작은따옴표(')를 사용하세요. 큰따옴표(")는 JSON 파싱 오류를 발생시킵니다.
 - 절대 마크다운 문법(##, **, [](url)) 사용 금지 - 순수 HTML만 사용
 
 ## 7. 필수 체크리스트
