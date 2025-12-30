@@ -24,6 +24,7 @@ export default function Tips() {
     ...filters,
     category_id: selectedCategory,
     language: currentLanguage,
+    is_published: true,
   });
 
   const { data: categories } = useTipCategories();
