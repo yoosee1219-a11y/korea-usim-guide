@@ -28,9 +28,14 @@ async function initializeApp() {
   const distPath = path.join(__dirname, '../dist/public');
   if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));
-    
-    // SPA 라우팅 - 모든 요청을 index.html로
-    app.use('*', (req, res) => {
+
+    // SPA 라우팅 - API 경로 제외하고 모든 요청을 index.html로
+    app.use((req, res, next) => {
+      // API 경로는 이미 registerRoutes에서 처리됨
+      if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ message: 'API endpoint not found' });
+      }
+
       const indexPath = path.join(distPath, 'index.html');
       if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
