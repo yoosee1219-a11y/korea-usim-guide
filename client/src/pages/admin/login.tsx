@@ -36,11 +36,11 @@ export default function AdminLogin() {
 
       toast({
         title: "로그인 성공",
-        description: "관리자 페이지로 이동합니다.",
+        description: "관리자 대시보드로 이동합니다.",
       });
 
-      // 콘텐츠 자동화 페이지로 리다이렉트
-      setLocation("/admin/content-automation");
+      // 통합 대시보드로 리다이렉트
+      setLocation("/admin");
     } catch (error) {
       toast({
         title: "로그인 실패",
