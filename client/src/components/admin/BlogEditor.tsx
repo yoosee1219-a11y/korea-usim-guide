@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
+import { useToast } from '@/hooks/use-toast'
 import {
   Bold,
   Italic,
@@ -76,6 +77,8 @@ interface BlogEditorProps {
 }
 
 export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditorProps) {
+  const { toast } = useToast()
+
   // Korean (primary language)
   const [title, setTitle] = useState(initialData?.title_ko || '')
   const [excerpt, setExcerpt] = useState(initialData?.excerpt_ko || '')
@@ -196,7 +199,11 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
 
   const handleAutoTranslate = async () => {
     if (!title.trim() || !editor?.getHTML()) {
-      alert('제목과 본문을 먼저 작성해주세요.')
+      toast({
+        title: "입력 오류",
+        description: "제목과 본문을 먼저 작성해주세요.",
+        variant: "destructive"
+      })
       return
     }
 
@@ -285,13 +292,20 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
         // For now, storing as plain text
       }
 
-      alert('번역이 완료되었습니다!')
+      toast({
+        title: "번역 완료",
+        description: "모든 언어로 번역이 완료되었습니다.",
+      })
 
       // Expand all language sections to show translated content
       setExpandedLanguages({ en: true, vi: true, th: true })
     } catch (error) {
       console.error('Translation error:', error)
-      alert('번역 중 오류가 발생했습니다.')
+      toast({
+        title: "번역 실패",
+        description: "번역 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
     } finally {
       setIsTranslating(false)
       setTranslationProgress({ title: false, excerpt: false, content: false })
@@ -318,7 +332,11 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
 
   const handleSave = async (publish: boolean) => {
     if (!title.trim() || !editor?.getHTML()) {
-      alert('제목과 내용을 입력해주세요.')
+      toast({
+        title: "입력 오류",
+        description: "제목과 내용을 입력해주세요.",
+        variant: "destructive"
+      })
       return
     }
 
@@ -372,7 +390,11 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
       })
     } catch (error) {
       console.error('Save error:', error)
-      alert('저장 중 오류가 발생했습니다.')
+      toast({
+        title: "저장 실패",
+        description: "저장 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
     } finally {
       setIsSaving(false)
     }

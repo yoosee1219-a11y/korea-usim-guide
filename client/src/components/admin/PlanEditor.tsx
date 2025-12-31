@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import { useToast } from '@/hooks/use-toast'
 
 interface PlanEditorProps {
   initialData?: {
@@ -36,6 +37,8 @@ interface PlanEditorProps {
 }
 
 export default function PlanEditor({ initialData, onSave, onCancel }: PlanEditorProps) {
+  const { toast } = useToast()
+
   const [carriers, setCarriers] = useState<any[]>([])
   const [carrierId, setCarrierId] = useState(initialData?.carrier_id || '')
   const [planType, setPlanType] = useState(initialData?.plan_type || 'data')
@@ -115,7 +118,11 @@ export default function PlanEditor({ initialData, onSave, onCancel }: PlanEditor
 
   const handleAutoTranslate = async () => {
     if (!description.trim()) {
-      alert('한국어 설명을 먼저 작성해주세요.')
+      toast({
+        title: "입력 오류",
+        description: "한국어 설명을 먼저 작성해주세요.",
+        variant: "destructive"
+      })
       return
     }
 
@@ -189,10 +196,17 @@ export default function PlanEditor({ initialData, onSave, onCancel }: PlanEditor
       setFeaturesVi(translatedFeatures.vi)
       setFeaturesTh(translatedFeatures.th)
 
-      alert('번역이 완료되었습니다!')
+      toast({
+        title: "번역 완료",
+        description: "모든 언어로 번역이 완료되었습니다.",
+      })
     } catch (error) {
       console.error('Translation error:', error)
-      alert('번역 중 오류가 발생했습니다.')
+      toast({
+        title: "번역 실패",
+        description: "번역 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
     } finally {
       setIsTranslating(false)
       setTranslationProgress({ description: false, features: 0, totalFeatures: 0 })
@@ -201,7 +215,11 @@ export default function PlanEditor({ initialData, onSave, onCancel }: PlanEditor
 
   const handleSave = async () => {
     if (!name.trim() || !carrierId || !priceKrw) {
-      alert('통신사, 요금제명, 가격은 필수 항목입니다.')
+      toast({
+        title: "입력 오류",
+        description: "통신사, 요금제명, 가격은 필수 항목입니다.",
+        variant: "destructive"
+      })
       return
     }
 
@@ -234,7 +252,11 @@ export default function PlanEditor({ initialData, onSave, onCancel }: PlanEditor
       })
     } catch (error) {
       console.error('Save error:', error)
-      alert('저장 중 오류가 발생했습니다.')
+      toast({
+        title: "저장 실패",
+        description: "저장 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
     } finally {
       setIsSaving(false)
     }

@@ -10,6 +10,7 @@ import { Breadcrumb } from "@/components/seo/Breadcrumb";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useToast } from "@/hooks/use-toast";
 import {
   generateHowToSchema,
   extractFAQsFromContent,
@@ -23,6 +24,7 @@ import { format } from "date-fns";
 export default function TipDetail() {
   const { currentLanguage } = useLanguage();
   const { translations } = useTranslation();
+  const { toast } = useToast();
   const [match, params] = useRoute("/tips/:id");
   const tipIdOrSlug = params?.id || "";
 
@@ -267,7 +269,9 @@ export default function TipDetail() {
                     });
                   } else {
                     navigator.clipboard.writeText(window.location.href);
-                    alert(translations.tipDetail.linkCopied);
+                    toast({
+                      title: translations.tipDetail.linkCopied,
+                    });
                   }
                 }}
               >
