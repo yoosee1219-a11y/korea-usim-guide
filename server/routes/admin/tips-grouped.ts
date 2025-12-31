@@ -153,4 +153,104 @@ router.post("/bulk-publish", async (req, res) => {
   }
 });
 
+// GET - 단일 Tip 조회 (수정용)
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await db.query(
+      `SELECT
+        t.*,
+        tc.name as category_name
+      FROM tips t
+      LEFT JOIN tip_categories tc ON t.category_id = tc.id
+      WHERE t.id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Tip not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Tip fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch tip' });
+  }
+});
+
+// PUT - 단일 Tip 업데이트 (썸네일 동기화 포함)
+router.put("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      title,
+      excerpt,
+      content,
+      thumbnail_url,
+      is_published,
+      sync_thumbnail // 한국어 원본인 경우 true
+    } = req.body;
+
+    // 입력 검증
+    if (!title || !content) {
+      return res.status(400).json({ error: 'Title and content are required' });
+    }
+
+    await db.query('BEGIN');
+
+    // 1. 현재 Tip 업데이트
+    await db.query(
+      `UPDATE tips SET
+        title = $1,
+        excerpt = $2,
+        content = $3,
+        thumbnail_url = $4,
+        is_published = $5,
+        published_at = CASE WHEN $5 THEN COALESCE(published_at, NOW()) ELSE NULL END,
+        updated_at = NOW()
+      WHERE id = $6`,
+      [title, excerpt, content, thumbnail_url, is_published, id]
+    );
+
+    let syncedCount = 0;
+
+    // 2. 썸네일 동기화 (한국어 원본인 경우만)
+    if (sync_thumbnail && thumbnail_url) {
+      // 현재 Tip이 한국어 원본인지 확인
+      const tipCheck = await db.query(
+        'SELECT language, original_tip_id FROM tips WHERE id = $1',
+        [id]
+      );
+
+      if (tipCheck.rows.length > 0 &&
+          tipCheck.rows[0].language === 'ko' &&
+          !tipCheck.rows[0].original_tip_id) {
+        // 모든 번역본의 썸네일 업데이트
+        const syncResult = await db.query(
+          `UPDATE tips SET
+            thumbnail_url = $1,
+            updated_at = NOW()
+          WHERE original_tip_id = $2`,
+          [thumbnail_url, id]
+        );
+
+        syncedCount = syncResult.rowCount || 0;
+      }
+    }
+
+    await db.query('COMMIT');
+
+    res.json({
+      success: true,
+      message: '업데이트 완료',
+      synced_count: syncedCount
+    });
+  } catch (error) {
+    await db.query('ROLLBACK');
+    console.error('Tip update error:', error);
+    res.status(500).json({ error: 'Failed to update tip' });
+  }
+});
+
 export default router;

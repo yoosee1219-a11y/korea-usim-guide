@@ -3,7 +3,7 @@ import { Link, useLocation } from 'wouter'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import { ChevronDown, ChevronRight, Globe, Trash2, Eye, EyeOff } from 'lucide-react'
+import { ChevronDown, ChevronRight, Globe, Trash2, Eye, EyeOff, Pencil } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 interface Translation {
@@ -396,8 +396,16 @@ export default function TipsGroupedList() {
                         /tips/{group.original.slug}
                       </div>
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {group.translations.length + 1} / {group.total_languages} 언어
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-gray-500">
+                        {group.translations.length + 1} / {group.total_languages} 언어
+                      </span>
+                      <Link href={`/admin/tips/edit/${group.original.id}`}>
+                        <Button variant="outline" size="sm">
+                          <Pencil className="w-4 h-4 mr-1" />
+                          수정
+                        </Button>
+                      </Link>
                     </div>
                   </div>
 
@@ -430,6 +438,11 @@ export default function TipsGroupedList() {
                               )}
                             </div>
                           </div>
+                          <Link href={`/admin/tips/edit/${translation.id}`}>
+                            <Button variant="ghost" size="sm">
+                              <Pencil className="w-3 h-3" />
+                            </Button>
+                          </Link>
                         </div>
                       ))}
                     </div>
