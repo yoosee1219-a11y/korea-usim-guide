@@ -14,6 +14,7 @@ import adminPlansRouter from "./routes/admin/plans.js";
 import keywordsRouter from "./routes/admin/keywords.js";
 import contentAutomationRouter from "./routes/admin/content-automation.js";
 import tipsGroupedRouter from "./routes/admin/tips-grouped.js";
+import plansScraperRouter from "./routes/admin/plans-scraper.js";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Sitemap 라우트 (인증 불필요, 먼저 등록하여 /api보다 우선)
@@ -32,6 +33,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/admin/keywords", keywordsRouter);
   app.use("/api/admin/content-automation", contentAutomationRouter);
   app.use("/api/admin/tips-grouped", tipsGroupedRouter);
+  app.use("/api/admin/plans-scraper", plansScraperRouter);
 
   // use storage to perform CRUD operations on the storage interface
   // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
