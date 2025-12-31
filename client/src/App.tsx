@@ -16,10 +16,13 @@ const PlanDetail = lazy(() => import("@/pages/plan-detail"));
 const Tips = lazy(() => import("@/pages/tips"));
 const TipDetail = lazy(() => import("@/pages/tip-detail"));
 const AdminLogin = lazy(() => import("@/pages/admin/login"));
+const AdminDashboard = lazy(() => import("@/pages/admin/dashboard"));
 const AdminPlanList = lazy(() => import("@/pages/admin/plan-list"));
 const AdminPlanNew = lazy(() => import("@/pages/admin/plan-new"));
 const AdminPlanEdit = lazy(() => import("@/pages/admin/plan-edit"));
+const AdminPlansScraper = lazy(() => import("@/pages/admin/plans-scraper"));
 const AdminTipsGrouped = lazy(() => import("@/pages/admin/tips-grouped-list"));
+const AdminTipEdit = lazy(() => import("@/pages/admin/tip-edit"));
 const AdminKeywordList = lazy(() => import("@/pages/admin/keyword-list"));
 const AdminContentAutomation = lazy(() => import("@/pages/admin/content-automation"));
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -45,7 +48,7 @@ function Router() {
 
         {/* 관리자 로그인 (보호 없음) */}
         <Route path="/admin/login" component={AdminLogin} />
-        <Route path="/admin" component={AdminLogin} />
+        <Route path="/admin" component={AdminDashboard} />
         <Route path="/admin/plans">
           <ProtectedRoute>
             <AdminPlanList />
@@ -59,6 +62,21 @@ function Router() {
         <Route path="/admin/plans/edit/:id">
           <ProtectedRoute>
             <AdminPlanEdit />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/plans-scraper">
+          <ProtectedRoute>
+            <AdminPlansScraper />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/tips">
+          <ProtectedRoute>
+            <AdminTipsGrouped />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/tips/edit/:id">
+          <ProtectedRoute>
+            <AdminTipEdit />
           </ProtectedRoute>
         </Route>
         <Route path="/admin/tips-grouped">
