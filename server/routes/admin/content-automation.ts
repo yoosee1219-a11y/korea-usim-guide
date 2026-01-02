@@ -239,7 +239,7 @@ router.get("/scheduler-settings", async (req, res) => {
       const defaultSettings = {
         enabled: false,
         interval: 24,
-        postsPerDay: 1,
+        postsPerDay: 3, // 하루 3개 (1개 → 3개로 증가)
         lastRun: null
       };
 
@@ -315,10 +315,11 @@ router.post("/run-scheduler", async (req, res) => {
       }
     }
 
-    // 대기 중인 키워드 가져오기
+    // 대기 중인 키워드 가져오기 (postsPerDay 설정만큼)
+    const postsPerDay = settings.postsPerDay || 3; // 기본값 3개
     const pendingKeywords = await db.query(
-      'SELECT * FROM content_keywords WHERE status = $1 ORDER BY priority DESC, created_at ASC LIMIT 1',
-      ['pending']
+      'SELECT * FROM content_keywords WHERE status = $1 ORDER BY priority DESC, created_at ASC LIMIT $2',
+      ['pending', postsPerDay]
     );
 
     if (pendingKeywords.rows.length === 0) {
@@ -326,12 +327,29 @@ router.post("/run-scheduler", async (req, res) => {
       return res.json({ message: 'No pending keywords', processed: 0 });
     }
 
-    const keyword = pendingKeywords.rows[0];
+    console.log(`📝 Processing ${pendingKeywords.rows.length} keywords...`);
 
-    console.log(`📝 Processing keyword: "${keyword.keyword}"`);
-
-    // 콘텐츠 생성
-    const result = await autoGenerateContent(keyword.id);
+    // 여러 키워드 순차 처리
+    const results = [];
+    for (const keyword of pendingKeywords.rows) {
+      console.log(`  → Generating: "${keyword.keyword}"`);
+      try {
+        const result = await autoGenerateContent(keyword.id);
+        results.push({
+          keyword: keyword.keyword,
+          success: result.success,
+          tipId: result.tipId,
+          slug: result.slug,
+          error: result.error
+        });
+      } catch (error) {
+        results.push({
+          keyword: keyword.keyword,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
 
     // 마지막 실행 시간 업데이트 (데이터베이스에)
     settings.lastRun = now.toISOString();
@@ -340,13 +358,14 @@ router.post("/run-scheduler", async (req, res) => {
       [JSON.stringify(settings)]
     );
 
+    const successCount = results.filter(r => r.success).length;
+
     res.json({
-      success: result.success,
-      processed: 1,
-      keyword: keyword.keyword,
-      tipId: result.tipId,
-      slug: result.slug,
-      error: result.error,
+      success: successCount > 0,
+      processed: results.length,
+      successCount,
+      failedCount: results.length - successCount,
+      results,
       nextRunAt: new Date(now.getTime() + settings.interval * 60 * 60 * 1000).toISOString()
     });
 
