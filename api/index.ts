@@ -51,10 +51,28 @@ async function initializeApp() {
 
 // 서버리스 함수 핸들러
 export default async function handler(req: any, res: any) {
-  // 디버깅: 요청 경로 로깅
-  console.log(`[Serverless] ${req.method} ${req.url} (path: ${req.path || 'N/A'})`);
+  try {
+    // 디버깅: 요청 경로 로깅
+    console.log(`[Serverless] ${req.method} ${req.url}`);
 
-  await initializeApp();
-  return app(req, res);
+    // 간단한 핑 테스트
+    if (req.url === '/api/ping') {
+      return res.status(200).json({
+        success: true,
+        message: 'pong',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    await initializeApp();
+    return app(req, res);
+  } catch (error) {
+    console.error('[Serverless Error]', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
 }
 
