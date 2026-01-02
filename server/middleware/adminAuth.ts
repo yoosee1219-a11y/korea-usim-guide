@@ -12,7 +12,11 @@ export function requireAdminAuth(req: Request, res: Response, next: NextFunction
     // Authorization 헤더에서 토큰 추출
     const authHeader = req.headers.authorization;
 
+    console.log('[AdminAuth] Request path:', req.path);
+    console.log('[AdminAuth] Authorization header:', authHeader ? 'present' : 'missing');
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('[AdminAuth] FAILED: No valid Bearer token');
       return res.status(401).json({
         error: 'Unauthorized',
         message: 'No token provided'
@@ -20,11 +24,14 @@ export function requireAdminAuth(req: Request, res: Response, next: NextFunction
     }
 
     const token = authHeader.substring(7); // 'Bearer ' 제거
+    console.log('[AdminAuth] Token length:', token.length);
 
     // 토큰 검증
     const decoded = verifyToken(token);
+    console.log('[AdminAuth] Decoded:', decoded ? 'valid' : 'invalid');
 
     if (!decoded || !decoded.admin) {
+      console.log('[AdminAuth] FAILED: Invalid or non-admin token');
       return res.status(401).json({
         error: 'Unauthorized',
         message: 'Invalid or expired token'
@@ -33,13 +40,15 @@ export function requireAdminAuth(req: Request, res: Response, next: NextFunction
 
     // 토큰이 유효하면 요청 객체에 사용자 정보 추가
     (req as any).admin = decoded;
+    console.log('[AdminAuth] SUCCESS: Admin authenticated');
 
     next();
   } catch (error) {
-    console.error('Admin auth middleware error:', error);
+    console.error('[AdminAuth] Exception:', error);
     return res.status(401).json({
       error: 'Unauthorized',
-      message: 'Authentication failed'
+      message: 'Authentication failed',
+      details: error instanceof Error ? error.message : String(error)
     });
   }
 }
