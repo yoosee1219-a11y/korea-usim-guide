@@ -4,6 +4,7 @@ import { requireAdminAuth } from "../../middleware/adminAuth.js";
 import { autoGenerateContent } from "../../../automation/workflows/content-automation.js";
 import { v2 } from '@google-cloud/translate';
 import { handleApiError, handleSuccess } from "../../utils/errorHandler.js";
+import { keywordResearchService } from "../../../automation/services/keyword-research.js";
 
 const router = Router();
 
@@ -313,6 +314,30 @@ router.post("/run-scheduler", async (req, res) => {
           nextRunDate: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
         });
       }
+    }
+
+    // 🔍 키워드 자동 리서치 (키워드 부족 시)
+    const KEYWORD_THRESHOLD = 10; // 대기 키워드가 10개 미만이면 리서치
+    const pendingCount = await keywordResearchService.getPendingKeywordsCount();
+
+    console.log(`📊 대기 중인 키워드: ${pendingCount}개`);
+
+    if (pendingCount < KEYWORD_THRESHOLD) {
+      console.log(`⚠️  키워드 부족 (${pendingCount}개 < ${KEYWORD_THRESHOLD}개) - 자동 리서치 시작`);
+
+      try {
+        const targetCount = 30; // 30개 신규 키워드 추가
+        const newKeywords = await keywordResearchService.researchKeywords(targetCount);
+        const savedCount = await keywordResearchService.saveKeywordsToDB(newKeywords);
+
+        console.log(`✅ 키워드 리서치 완료: ${savedCount}개 추가`);
+        console.log(`📈 총 대기 키워드: ${pendingCount} → ${pendingCount + savedCount}개`);
+      } catch (error) {
+        console.error('❌ 키워드 리서치 실패:', error);
+        // 리서치 실패해도 기존 키워드로 계속 진행
+      }
+    } else {
+      console.log(`✅ 키워드 충분함 (${pendingCount}개) - 리서치 스킵`);
     }
 
     // 대기 중인 키워드 가져오기 (postsPerDay 설정만큼)
