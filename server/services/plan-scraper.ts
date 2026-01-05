@@ -8,6 +8,7 @@ export interface ScrapedPlan {
   voice: string;
   sms: string;
   features?: string[];
+  details?: any; // 전체 원본 데이터 (요금제별 상세 정보)
 }
 
 export class PlanScraperService {
@@ -223,7 +224,7 @@ export class PlanScraperService {
       const ratePlans = response.data.data?.ratePlans || [];
       console.log(`✅ Found ${ratePlans.length} plans from API`);
 
-      // API 데이터를 우리 형식으로 변환
+      // API 데이터를 우리 형식으로 변환 (전체 원본 데이터 포함)
       const results: ScrapedPlan[] = ratePlans.map((plan: any) => ({
         name: plan.svcName || 'Unknown Plan',
         price: parseInt(plan.monthlyFee || plan.basicFee || '0'),
@@ -232,9 +233,11 @@ export class PlanScraperService {
         sms: plan.freeSms || 'N/A',
         features: plan.freeVoiceAdd || plan.freeDataAdd ?
           [plan.freeVoiceAdd, plan.freeDataAdd].filter(Boolean) :
-          undefined
+          undefined,
+        details: plan // 전체 API 응답 저장 (모든 상세 정보)
       })).filter(p => p.price > 0);
 
+      console.log(`📦 Including full details for ${results.length} plans`);
       return results;
 
     } catch (error) {
