@@ -12,12 +12,17 @@ export interface ScrapedPlan {
 
 export class PlanScraperService {
   /**
-   * URL에서 요금제 정보 스크래핑 (정적 HTML)
+   * URL에서 요금제 정보 스크래핑 (정적 HTML 또는 API)
    */
   async scrapePlans(url: string): Promise<ScrapedPlan[]> {
     console.log(`🚀 Starting scraper for: ${url}`);
 
     try {
+      // 프리티 사이트는 API 직접 호출
+      if (url.includes('freet.co.kr')) {
+        return await this.scrapeFreetAPI(url);
+      }
+
       console.log('📄 Loading page...');
 
       // HTML 페이지 가져오기
@@ -187,6 +192,55 @@ export class PlanScraperService {
 
   private isValidPlan(plan: Partial<ScrapedPlan>): plan is ScrapedPlan {
     return !!(plan.price && plan.data);
+  }
+
+  /**
+   * 프리티 API 직접 호출
+   */
+  private async scrapeFreetAPI(url: string): Promise<ScrapedPlan[]> {
+    console.log('🔍 Detected Freet.co.kr - using API...');
+
+    try {
+      // 프리티 요금제 API 호출
+      const response = await axios.get('https://api.freet.co.kr/plan/v1/list', {
+        params: {
+          rowSize: 100,
+          pageNo: 1,
+          svcTypes: 'PP', // 선불 요금제
+          onlineAuth: 'Y'
+        },
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        },
+        timeout: 30000
+      });
+
+      if (response.data.status !== 'success') {
+        throw new Error('API request failed');
+      }
+
+      const ratePlans = response.data.data?.ratePlans || [];
+      console.log(`✅ Found ${ratePlans.length} plans from API`);
+
+      // API 데이터를 우리 형식으로 변환
+      const results: ScrapedPlan[] = ratePlans.map((plan: any) => ({
+        name: plan.svcName || 'Unknown Plan',
+        price: parseInt(plan.monthlyFee || plan.basicFee || '0'),
+        data: plan.freeData || 'N/A',
+        voice: plan.freeVoice || 'N/A',
+        sms: plan.freeSms || 'N/A',
+        features: plan.freeVoiceAdd || plan.freeDataAdd ?
+          [plan.freeVoiceAdd, plan.freeDataAdd].filter(Boolean) :
+          undefined
+      })).filter(p => p.price > 0);
+
+      return results;
+
+    } catch (error) {
+      console.error('❌ Freet API error:', error);
+      throw new Error(`Freet API scraping failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   /**
