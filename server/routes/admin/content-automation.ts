@@ -9,6 +9,131 @@ import { keywordResearchService } from "../../../automation/services/keyword-res
 const router = Router();
 
 // 모든 라우트에 관리자 인증 미들웨어 적용
+// ⚡ Vercel Cron Job 전용 엔드포인트 (인증 불필요)
+// 이 엔드포인트는 requireAdminAuth 전에 정의해야 합니다
+// POST - 스케줄러 실행 (크론/수동 호출용)
+router.post("/run-scheduler", async (req, res) => {
+  try {
+    console.log('🕐 Scheduler triggered');
+
+    // 설정 읽기 (데이터베이스에서)
+    const settingsResult = await db.query(
+      "SELECT value FROM app_settings WHERE key = 'scheduler_settings'"
+    );
+
+    if (settingsResult.rows.length === 0) {
+      return res.json({ message: 'Scheduler not configured', processed: 0 });
+    }
+
+    const settings = settingsResult.rows[0].value;
+
+    if (!settings.enabled) {
+      return res.json({ message: 'Scheduler is disabled', processed: 0 });
+    }
+
+    // 마지막 실행 날짜 확인 (하루에 한 번만 실행)
+    const now = new Date();
+    const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    if (settings.lastRun) {
+      const lastRun = new Date(settings.lastRun);
+      const lastRunDate = lastRun.toISOString().split('T')[0]; // YYYY-MM-DD
+
+      if (lastRunDate === today) {
+        console.log(`⏱️ Already ran today: ${lastRunDate}`);
+        return res.json({
+          message: 'Already ran today',
+          lastRun: settings.lastRun,
+          nextRunDate: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        });
+      }
+    }
+
+    // 🔍 키워드 자동 리서치 (키워드 부족 시)
+    const KEYWORD_THRESHOLD = 10; // 대기 키워드가 10개 미만이면 리서치
+    const pendingCount = await keywordResearchService.getPendingKeywordsCount();
+
+    console.log(`📊 대기 중인 키워드: ${pendingCount}개`);
+
+    if (pendingCount < KEYWORD_THRESHOLD) {
+      console.log(`⚠️  키워드 부족 (${pendingCount}개 < ${KEYWORD_THRESHOLD}개) - 자동 리서치 시작`);
+
+      try {
+        const targetCount = 30; // 30개 신규 키워드 추가
+        const newKeywords = await keywordResearchService.researchKeywords(targetCount);
+        const savedCount = await keywordResearchService.saveKeywordsToDB(newKeywords);
+
+        console.log(`✅ 키워드 리서치 완료: ${savedCount}개 추가`);
+        console.log(`📈 총 대기 키워드: ${pendingCount} → ${pendingCount + savedCount}개`);
+      } catch (error) {
+        console.error('❌ 키워드 리서치 실패:', error);
+        // 리서치 실패해도 기존 키워드로 계속 진행
+      }
+    } else {
+      console.log(`✅ 키워드 충분함 (${pendingCount}개) - 리서치 스킵`);
+    }
+
+    // 대기 중인 키워드 가져오기 (postsPerDay 설정만큼)
+    const postsPerDay = settings.postsPerDay || 1; // 기본값 1개 (Vercel Free)
+    const pendingKeywords = await db.query(
+      'SELECT * FROM content_keywords WHERE status = $1 ORDER BY priority DESC, created_at ASC LIMIT $2',
+      ['pending', postsPerDay]
+    );
+
+    if (pendingKeywords.rows.length === 0) {
+      console.log('✅ No pending keywords');
+      return res.json({ message: 'No pending keywords', processed: 0 });
+    }
+
+    console.log(`📝 Processing ${pendingKeywords.rows.length} keywords...`);
+
+    // 여러 키워드 순차 처리
+    const results = [];
+    for (const keyword of pendingKeywords.rows) {
+      console.log(`  → Generating: "${keyword.keyword}"`);
+      try {
+        const result = await autoGenerateContent(keyword.id);
+        results.push({
+          keyword: keyword.keyword,
+          success: result.success,
+          tipId: result.tipId,
+          slug: result.slug,
+          error: result.error
+        });
+      } catch (error) {
+        results.push({
+          keyword: keyword.keyword,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
+
+    // 마지막 실행 시간 업데이트 (데이터베이스에)
+    settings.lastRun = now.toISOString();
+    await db.query(
+      `UPDATE app_settings SET value = $1, updated_at = CURRENT_TIMESTAMP WHERE key = 'scheduler_settings'`,
+      [JSON.stringify(settings)]
+    );
+
+    const successCount = results.filter(r => r.success).length;
+
+    res.json({
+      success: successCount > 0,
+      processed: results.length,
+      successCount,
+      failedCount: results.length - successCount,
+      results,
+      nextRunAt: new Date(now.getTime() + settings.interval * 60 * 60 * 1000).toISOString()
+    });
+
+  } catch (error) {
+    console.error('Scheduler run error:', error);
+    res.status(500).json({ error: 'Scheduler execution failed' });
+  }
+});
+
+// 이 아래 라우트는 모두 관리자 인증 필요
 router.use(requireAdminAuth);
 
 // POST - 단일 키워드로 콘텐츠 생성
@@ -240,7 +365,7 @@ router.get("/scheduler-settings", async (req, res) => {
       const defaultSettings = {
         enabled: false,
         interval: 24,
-        postsPerDay: 3, // 하루 3개 (1개 → 3개로 증가)
+        postsPerDay: 1, // Vercel Free 플랜 기본값: 1개
         lastRun: null
       };
 
@@ -278,127 +403,6 @@ router.post("/scheduler-settings", async (req, res) => {
   }
 });
 
-// POST - 스케줄러 실행 (크론/수동 호출용)
-router.post("/run-scheduler", async (req, res) => {
-  try {
-    console.log('🕐 Scheduler triggered');
-
-    // 설정 읽기 (데이터베이스에서)
-    const settingsResult = await db.query(
-      "SELECT value FROM app_settings WHERE key = 'scheduler_settings'"
-    );
-
-    if (settingsResult.rows.length === 0) {
-      return res.json({ message: 'Scheduler not configured', processed: 0 });
-    }
-
-    const settings = settingsResult.rows[0].value;
-
-    if (!settings.enabled) {
-      return res.json({ message: 'Scheduler is disabled', processed: 0 });
-    }
-
-    // 마지막 실행 날짜 확인 (하루에 한 번만 실행)
-    const now = new Date();
-    const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
-
-    if (settings.lastRun) {
-      const lastRun = new Date(settings.lastRun);
-      const lastRunDate = lastRun.toISOString().split('T')[0]; // YYYY-MM-DD
-
-      if (lastRunDate === today) {
-        console.log(`⏱️ Already ran today: ${lastRunDate}`);
-        return res.json({
-          message: 'Already ran today',
-          lastRun: settings.lastRun,
-          nextRunDate: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-        });
-      }
-    }
-
-    // 🔍 키워드 자동 리서치 (키워드 부족 시)
-    const KEYWORD_THRESHOLD = 10; // 대기 키워드가 10개 미만이면 리서치
-    const pendingCount = await keywordResearchService.getPendingKeywordsCount();
-
-    console.log(`📊 대기 중인 키워드: ${pendingCount}개`);
-
-    if (pendingCount < KEYWORD_THRESHOLD) {
-      console.log(`⚠️  키워드 부족 (${pendingCount}개 < ${KEYWORD_THRESHOLD}개) - 자동 리서치 시작`);
-
-      try {
-        const targetCount = 30; // 30개 신규 키워드 추가
-        const newKeywords = await keywordResearchService.researchKeywords(targetCount);
-        const savedCount = await keywordResearchService.saveKeywordsToDB(newKeywords);
-
-        console.log(`✅ 키워드 리서치 완료: ${savedCount}개 추가`);
-        console.log(`📈 총 대기 키워드: ${pendingCount} → ${pendingCount + savedCount}개`);
-      } catch (error) {
-        console.error('❌ 키워드 리서치 실패:', error);
-        // 리서치 실패해도 기존 키워드로 계속 진행
-      }
-    } else {
-      console.log(`✅ 키워드 충분함 (${pendingCount}개) - 리서치 스킵`);
-    }
-
-    // 대기 중인 키워드 가져오기 (postsPerDay 설정만큼)
-    const postsPerDay = settings.postsPerDay || 3; // 기본값 3개
-    const pendingKeywords = await db.query(
-      'SELECT * FROM content_keywords WHERE status = $1 ORDER BY priority DESC, created_at ASC LIMIT $2',
-      ['pending', postsPerDay]
-    );
-
-    if (pendingKeywords.rows.length === 0) {
-      console.log('✅ No pending keywords');
-      return res.json({ message: 'No pending keywords', processed: 0 });
-    }
-
-    console.log(`📝 Processing ${pendingKeywords.rows.length} keywords...`);
-
-    // 여러 키워드 순차 처리
-    const results = [];
-    for (const keyword of pendingKeywords.rows) {
-      console.log(`  → Generating: "${keyword.keyword}"`);
-      try {
-        const result = await autoGenerateContent(keyword.id);
-        results.push({
-          keyword: keyword.keyword,
-          success: result.success,
-          tipId: result.tipId,
-          slug: result.slug,
-          error: result.error
-        });
-      } catch (error) {
-        results.push({
-          keyword: keyword.keyword,
-          success: false,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        });
-      }
-    }
-
-    // 마지막 실행 시간 업데이트 (데이터베이스에)
-    settings.lastRun = now.toISOString();
-    await db.query(
-      `UPDATE app_settings SET value = $1, updated_at = CURRENT_TIMESTAMP WHERE key = 'scheduler_settings'`,
-      [JSON.stringify(settings)]
-    );
-
-    const successCount = results.filter(r => r.success).length;
-
-    res.json({
-      success: successCount > 0,
-      processed: results.length,
-      successCount,
-      failedCount: results.length - successCount,
-      results,
-      nextRunAt: new Date(now.getTime() + settings.interval * 60 * 60 * 1000).toISOString()
-    });
-
-  } catch (error) {
-    console.error('Scheduler run error:', error);
-    res.status(500).json({ error: 'Scheduler execution failed' });
-  }
-});
 
 // POST - 누락된 번역 추가
 router.post("/add-missing-translations", async (req, res) => {
