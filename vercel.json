@@ -7,7 +7,7 @@
   "crons": [
     {
       "path": "/api/admin/content-automation/run-scheduler",
-      "schedule": "0 10 * * *"
+      "schedule": "0 1 * * *"
     }
   ],
   "headers": [
