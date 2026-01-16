@@ -8,9 +8,15 @@ import { Loader2 } from "lucide-react";
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  const fillDemoCredentials = () => {
+    setEmail("demo@demo.com");
+    setPassword("demo1234");
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +28,7 @@ export default function AdminLogin() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ email: email || undefined, password }),
       });
 
       const data = await response.json();
@@ -66,18 +72,31 @@ export default function AdminLogin() {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium">
+                이메일 (선택)
+              </label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="이메일을 입력하세요"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+                autoFocus
+              />
+            </div>
+            <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium">
                 비밀번호
               </label>
               <Input
                 id="password"
                 type="password"
-                placeholder="관리자 비밀번호를 입력하세요"
+                placeholder="비밀번호를 입력하세요"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
                 required
-                autoFocus
               />
             </div>
             <Button
@@ -95,6 +114,24 @@ export default function AdminLogin() {
               )}
             </Button>
           </form>
+
+          <div className="mt-6 pt-6 border-t">
+            <p className="text-sm text-gray-500 text-center mb-3">
+              데모 체험하기
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={fillDemoCredentials}
+              disabled={isLoading}
+            >
+              데모 계정으로 로그인
+            </Button>
+            <p className="text-xs text-gray-400 text-center mt-2">
+              데모 계정은 읽기 전용입니다
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

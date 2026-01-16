@@ -20,12 +20,20 @@ export default function AdminDashboard() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
   const [password, setPassword] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
     if (token) {
       setIsAuthenticated(true);
+      // JWT 토큰에서 isDemo 플래그 확인
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setIsDemo(payload.isDemo === true);
+      } catch {
+        setIsDemo(false);
+      }
     }
   }, []);
 
@@ -149,8 +157,17 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      {/* Demo Mode Banner */}
+      {isDemo && (
+        <div className="bg-amber-500 text-white px-4 py-3 text-center">
+          <span className="font-medium">
+            데모 모드 - 읽기 전용으로 실행 중입니다. 데이터 수정/삭제가 제한됩니다.
+          </span>
+        </div>
+      )}
+
+      <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
