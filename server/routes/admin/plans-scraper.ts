@@ -1,12 +1,13 @@
 import { Router } from "express";
 import { db } from "../../storage/db.js";
-import { requireAdminAuth } from "../../middleware/adminAuth.js";
+import { requireAdminAuth, blockDemoWrites } from "../../middleware/adminAuth.js";
 import { planScraperService } from "../../services/plan-scraper.js";
 
 const router = Router();
 
-// 모든 라우트에 관리자 인증 미들웨어 적용
+// 모든 라우트에 관리자 인증 + 데모 쓰기 차단 미들웨어 적용
 router.use(requireAdminAuth);
+router.use(blockDemoWrites);
 
 // POST - 스크래핑 실행
 router.post("/scrape", async (req, res) => {

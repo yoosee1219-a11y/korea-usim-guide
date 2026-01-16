@@ -1,12 +1,13 @@
 import { Router } from "express";
 import { db } from "../../storage/db.js";
-import { requireAdminAuth } from "../../middleware/adminAuth.js";
+import { requireAdminAuth, blockDemoWrites } from "../../middleware/adminAuth.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const router = Router();
 
-// 모든 라우트에 관리자 인증 미들웨어 적용
+// 모든 라우트에 관리자 인증 + 데모 쓰기 차단 미들웨어 적용
 router.use(requireAdminAuth);
+router.use(blockDemoWrites);
 
 // GET - 모든 키워드 조회
 router.get("/", async (req, res) => {

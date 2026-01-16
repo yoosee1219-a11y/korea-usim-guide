@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../../storage/db.js";
-import { requireAdminAuth } from "../../middleware/adminAuth.js";
+import { requireAdminAuth, blockDemoWrites } from "../../middleware/adminAuth.js";
 import { autoGenerateContent } from "../../../automation/workflows/content-automation.js";
 import { v2 } from '@google-cloud/translate';
 import { handleApiError, handleSuccess } from "../../utils/errorHandler.js";
@@ -133,8 +133,9 @@ router.post("/run-scheduler", async (req, res) => {
   }
 });
 
-// 이 아래 라우트는 모두 관리자 인증 필요
+// 이 아래 라우트는 모두 관리자 인증 + 데모 쓰기 차단 필요
 router.use(requireAdminAuth);
+router.use(blockDemoWrites);
 
 // POST - 단일 키워드로 콘텐츠 생성
 router.post("/generate/:keywordId", async (req, res) => {

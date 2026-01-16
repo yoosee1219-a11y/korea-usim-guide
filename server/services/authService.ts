@@ -13,6 +13,21 @@ const JWT_EXPIRES_IN = '24h'; // 24시간
 // 실제 운영에서는 더 강력한 비밀번호를 사용하세요!
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
 
+// 데모 계정 (평문 - 데모용이므로 보안이 중요하지 않음)
+const DEMO_ACCOUNT = {
+  email: 'demo@demo.com',
+  password: 'demo1234',
+  isDemo: true
+};
+
+// JWT Payload 타입
+interface JWTPayload {
+  admin: boolean;
+  username?: string;
+  email?: string;
+  isDemo?: boolean;
+}
+
 /**
  * 비밀번호를 Argon2로 해싱
  */
@@ -46,7 +61,7 @@ export async function verifyPassword(hash: string, password: string): Promise<bo
 /**
  * JWT 토큰 생성
  */
-export function generateToken(payload: { admin: boolean; username?: string }): string {
+export function generateToken(payload: JWTPayload): string {
   return jwt.sign(payload, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN,
     issuer: 'korea-usim-guide',
@@ -107,6 +122,35 @@ export async function authenticateAdmin(password: string): Promise<string | null
     return null;
   } catch (error) {
     console.error('Admin authentication error:', error);
+    return null;
+  }
+}
+
+/**
+ * 이메일 + 비밀번호로 로그인 (데모 계정 지원)
+ */
+export async function authenticateWithEmail(email: string, password: string): Promise<string | null> {
+  try {
+    // 1. 데모 계정 체크
+    if (email === DEMO_ACCOUNT.email && password === DEMO_ACCOUNT.password) {
+      console.log('Demo account login successful');
+      const token = generateToken({
+        admin: true,
+        username: 'demo',
+        email: DEMO_ACCOUNT.email,
+        isDemo: true
+      });
+      return token;
+    }
+
+    // 2. 관리자 계정 체크 (기존 방식 - 비밀번호만 사용)
+    if (!email || email === 'admin@admin.com' || email === 'admin') {
+      return await authenticateAdmin(password);
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Email authentication error:', error);
     return null;
   }
 }

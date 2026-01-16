@@ -76,3 +76,27 @@ export function optionalAdminAuth(req: Request, res: Response, next: NextFunctio
     next();
   }
 }
+
+/**
+ * 데모 계정 쓰기 차단 미들웨어
+ * POST, PUT, PATCH, DELETE 요청에서 데모 계정 차단
+ */
+export function blockDemoWrites(req: Request, res: Response, next: NextFunction) {
+  const admin = (req as any).admin;
+
+  // 읽기 요청은 허용
+  if (req.method === 'GET') {
+    return next();
+  }
+
+  // 데모 계정은 쓰기 차단
+  if (admin && admin.isDemo) {
+    console.log('[AdminAuth] Demo account write blocked:', req.method, req.path);
+    return res.status(403).json({
+      error: 'Forbidden',
+      message: '데모 계정은 데이터를 수정할 수 없습니다. (읽기 전용 모드)'
+    });
+  }
+
+  next();
+}

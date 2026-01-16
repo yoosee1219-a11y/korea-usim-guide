@@ -1,15 +1,15 @@
 import { Router } from 'express';
-import { authenticateAdmin } from '../../services/authService.js';
+import { authenticateAdmin, authenticateWithEmail } from '../../services/authService.js';
 
 const router = Router();
 
 /**
  * POST /api/admin/login
- * 관리자 로그인
+ * 관리자 로그인 (이메일 + 비밀번호 또는 비밀번호만)
  */
 router.post('/', async (req, res) => {
   try {
-    const { password } = req.body;
+    const { email, password } = req.body;
 
     if (!password) {
       return res.status(400).json({
@@ -18,13 +18,20 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // 비밀번호 검증 및 JWT 토큰 생성
-    const token = await authenticateAdmin(password);
+    let token: string | null = null;
+
+    // 이메일이 있으면 이메일 기반 인증 (데모 계정 지원)
+    if (email) {
+      token = await authenticateWithEmail(email, password);
+    } else {
+      // 기존 방식 (비밀번호만)
+      token = await authenticateAdmin(password);
+    }
 
     if (!token) {
       return res.status(401).json({
         error: 'Unauthorized',
-        message: 'Invalid password'
+        message: 'Invalid credentials'
       });
     }
 
@@ -70,7 +77,9 @@ router.post('/verify', async (req, res) => {
 
     res.json({
       valid: true,
-      admin: decoded.admin
+      admin: decoded.admin,
+      isDemo: decoded.isDemo || false,
+      email: decoded.email
     });
   } catch (error) {
     console.error('Token verification error:', error);
